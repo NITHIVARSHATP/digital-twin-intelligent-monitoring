@@ -1,0 +1,42 @@
+Candidate Retraining Comparison
+================================
+
+Original dataset rows: 5499
+Original training rows: 4399
+Untouched original test rows: 1100
+Verified buffer rows: 1500
+Candidate training rows: 5899
+
+Production accuracy: 97.55%
+Candidate accuracy: 97.00%
+Best candidate accuracy during training: 97.00%
+
+Per-class recall comparison
+Fault 0 | Production: 97.08% | Candidate: 96.27%
+Fault 1 | Production: 100.00% | Candidate: 100.00%
+Fault 2 | Production: 100.00% | Candidate: 99.22%
+Fault 3 | Production: 95.41% | Candidate: 94.50%
+Fault 4 | Production: 92.11% | Candidate: 97.37%
+Fault 5 | Production: 99.15% | Candidate: 98.31%
+
+Promotion rules
+Candidate accuracy >= 95.00%
+Candidate accuracy drop <= 0.00%
+Every candidate class recall >= 90.00%
+
+Decision: REVIEW_REQUIRED
+Eligible for automatic promotion: False
+
+Candidate classification report
+              precision    recall  f1-score   support
+
+     Fault 0       0.99      0.96      0.98       617
+     Fault 1       0.99      1.00      0.99        90
+     Fault 2       0.88      0.99      0.93       128
+     Fault 3       0.99      0.94      0.97       109
+     Fault 4       0.88      0.97      0.93        38
+     Fault 5       0.97      0.98      0.97       118
+
+    accuracy                           0.97      1100
+   macro avg       0.95      0.98      0.96      1100
+weighted avg       0.97      0.97      0.97      1100

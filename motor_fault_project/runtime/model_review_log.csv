@@ -1,0 +1,3 @@
+Review_Timestamp,Candidate_Model,Production_Accuracy,Candidate_Accuracy,Accuracy_Change_Percentage_Points,Production_Fault_4_Recall,Candidate_Fault_4_Recall,Fault_4_Recall_Change_Percentage_Points,System_Decision,Reviewer_Decision,Reviewer_Name,Review_Notes
+2026-09-30T00:10:53,candidate_motor_model.pth,97.55,97.00,-0.55,92.11,97.37,5.26,REVIEW_REQUIRED,SUPERSEDED,Sai,Duplicate review record superseded by the reviewed entry at 2026-09-30T00:12:02.
+2026-09-30T00:12:02,candidate_motor_model.pth,97.55,97.00,-0.55,92.11,97.37,5.26,REVIEW_REQUIRED,REQUEST_MORE_DATA,Sai,"Fault 4 improved, but overall accuracy decreased."
