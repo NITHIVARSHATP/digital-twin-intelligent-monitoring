@@ -31,21 +31,3 @@ The system aims to provide a centralized interface for machine-health monitoring
 ## Technology Stack
 
 The technology stack will be finalized during implementation. The project may use Python, Machine Learning libraries, a backend framework, a database, and a web-based frontend for analytics and visualization.
-
-## Project Status
-
-**Current Stage:** Initial Review Completed
-
-The initial review covered the problem statement, literature survey, objectives, proposed methodology, system architecture, and major software modules.
-
-Software development, module integration, and system evaluation will follow in subsequent stages.
-
-```
-
-Additional directories for documentation, datasets, backend services, frontend components, Machine Learning models, and tests will be introduced when required.
-
-## License
-
-A license will be added when the project's distribution requirements are finalized.
-
----
