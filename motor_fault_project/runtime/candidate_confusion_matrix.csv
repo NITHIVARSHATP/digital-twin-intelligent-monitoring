@@ -1,7 +1,7 @@
 ,Predicted_Fault_0,Predicted_Fault_1,Predicted_Fault_2,Predicted_Fault_3,Predicted_Fault_4,Predicted_Fault_5
-Actual_Fault_0,594,1,18,0,0,4
+Actual_Fault_0,586,3,24,2,0,2
 Actual_Fault_1,0,90,0,0,0,0
-Actual_Fault_2,1,0,127,0,0,0
-Actual_Fault_3,1,0,0,103,5,0
-Actual_Fault_4,0,0,0,1,37,0
-Actual_Fault_5,2,0,0,0,0,116
+Actual_Fault_2,5,0,123,0,0,0
+Actual_Fault_3,0,0,0,106,3,0
+Actual_Fault_4,0,0,0,3,35,0
+Actual_Fault_5,2,1,0,0,0,115

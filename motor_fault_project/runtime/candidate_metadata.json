@@ -1,0 +1,23 @@
+{
+  "created_at": "2026-10-13T23:24:08",
+  "candidate_artifact": "C:\\Users\\NITHISHVARAN T P\\OneDrive\\Pictures\\Screenshots\\filez\\FINAL_YEAR_PROJ\\Project\\Digital_Twin\\digital-twin-intelligent-monitoring\\motor_fault_project\\models\\candidate_motor_model.pth",
+  "decision": "REVIEW_REQUIRED",
+  "eligible_for_promotion": false,
+  "accuracy": 0.9590909090909091,
+  "macro_precision": 0.9402151145570681,
+  "macro_recall": 0.9631333925256881,
+  "macro_f1": 0.9508022941506026,
+  "minimum_class_recall": 0.9210526315789473,
+  "best_validation_accuracy": 0.9627272486686707,
+  "test_used_for_model_selection": false,
+  "dataset_fingerprint": "sha256:d58408e7997d06453dcc0930260eac4a3f5f918ed4587638feb9b09e3f42c301",
+  "candidate_training_fingerprint": "sha256:c2feed87746a9f40b72c17fcf170715a0e54a11f8f1e342e7a4af88cf95516d9",
+  "split_methodology": "stratified_group_60_20_20_v1",
+  "production_accuracy": 0.9745454545454545,
+  "production_macro_f1": 0.9726282597411305,
+  "accuracy_drop": 0.015454545454545388,
+  "macro_f1_drop": 0.021825965590527963,
+  "training_rows": 4799,
+  "validation_rows": 1100,
+  "test_rows": 1100
+}

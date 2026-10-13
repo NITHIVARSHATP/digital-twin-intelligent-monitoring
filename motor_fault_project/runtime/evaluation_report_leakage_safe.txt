@@ -1,0 +1,39 @@
+Leakage-Safe Production Evaluation
+=================================
+
+Dataset fingerprint: sha256:d58408e7997d06453dcc0930260eac4a3f5f918ed4587638feb9b09e3f42c301
+Split methodology: stratified_group_60_20_20_v1
+Training records: 3299
+Validation records: 1100
+Test records: 1100
+Accuracy: 97.45%
+Macro precision: 96.43%
+Macro recall: 98.26%
+Macro F1: 97.26%
+Inference latency milliseconds per record: 0.0044
+Test set untouched during model selection: True
+Known limitations: this evaluates the current artifact; artifacts without leakage-safe metadata cannot prove historical test isolation.
+
+Per-class metrics
+Fault 0 | Precision: 99.66% | Recall: 96.43% | F1: 98.02%
+Fault 1 | Precision: 97.83% | Recall: 100.00% | F1: 98.90%
+Fault 2 | Precision: 86.39% | Recall: 99.22% | F1: 92.36%
+Fault 3 | Precision: 98.18% | Recall: 99.08% | F1: 98.63%
+Fault 4 | Precision: 97.37% | Recall: 97.37% | F1: 97.37%
+Fault 5 | Precision: 99.14% | Recall: 97.46% | F1: 98.29%
+
+Classification report
+              precision    recall  f1-score   support
+
+     Fault 0       1.00      0.96      0.98       617
+     Fault 1       0.98      1.00      0.99        90
+     Fault 2       0.86      0.99      0.92       128
+     Fault 3       0.98      0.99      0.99       109
+     Fault 4       0.97      0.97      0.97        38
+     Fault 5       0.99      0.97      0.98       118
+
+    accuracy                           0.97      1100
+   macro avg       0.96      0.98      0.97      1100
+weighted avg       0.98      0.97      0.98      1100
+
+Confusion matrix file: C:\Users\NITHISHVARAN T P\OneDrive\Pictures\Screenshots\filez\FINAL_YEAR_PROJ\Project\Digital_Twin\digital-twin-intelligent-monitoring\motor_fault_project\runtime\confusion_matrix_leakage_safe.csv

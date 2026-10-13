@@ -1,0 +1,21 @@
+# Firebase credentials & secrets
+*firebase-adminsdk*.json
+firebase_credentials.json
+serviceAccountKey.json
+*.json.key
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Operational logs & local runtime
+motor_fault_project/runtime/operational_log.csv
+motor_fault_project/runtime/live_predictions.csv

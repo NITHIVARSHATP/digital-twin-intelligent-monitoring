@@ -1,0 +1,11 @@
+{
+  "state": "completed",
+  "last_trigger": "scheduled_label_count",
+  "last_started": "2026-10-13T17:32:44+00:00",
+  "last_completed": "2026-10-13T17:33:43+00:00",
+  "last_error": null,
+  "pid": null,
+  "eligible_labelled_records": 1500,
+  "last_labelled_fingerprint": "sha256:a9190b131cfe31636d3ac2d403dfaad7ea9eb2cdda80e922ea968c10e92e3c9f",
+  "manual_requests": 1
+}

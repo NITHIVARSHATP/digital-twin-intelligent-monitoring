@@ -1,5 +1,7 @@
 import json
 import sys
+import time
+from datetime import datetime
 from pathlib import Path
 
 import joblib
@@ -11,9 +13,10 @@ from sklearn.metrics import (
     accuracy_score,
     classification_report,
     confusion_matrix,
+    precision_recall_fscore_support,
 )
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
 from torch import nn
 from torch.utils.data import DataLoader
 from torch.utils.data import TensorDataset
@@ -25,6 +28,17 @@ sys.path.insert(
 )
 
 import config
+from training_utils import (
+    TRAINING_SPLIT_METHOD,
+    dataset_fingerprint,
+    load_labelled_dataset,
+    split_dataframe,
+)
+
+try:
+    from xgboost import XGBClassifier
+except ImportError:
+    XGBClassifier = None
 
 
 BATCH_SIZE = 64
@@ -55,7 +69,7 @@ CANDIDATE_CLASSES_FILE = (
 
 COMPARISON_REPORT_FILE = (
     config.RUNTIME_DIR
-    / "candidate_comparison_report.txt"
+    / "candidate_comparison_report_leakage_safe.txt"
 )
 
 CANDIDATE_MATRIX_FILE = (
@@ -63,11 +77,26 @@ CANDIDATE_MATRIX_FILE = (
     / "candidate_confusion_matrix.csv"
 )
 
+CANDIDATE_METADATA_FILE = (
+    config.RUNTIME_DIR / "candidate_metadata.json"
+)
+
+MODEL_COMPARISON_REPORT_FILE = (
+    config.RUNTIME_DIR
+    / "model_comparison_leakage_safe.txt"
+)
+
+MODEL_COMPARISON_MATRIX_FILE = (
+    config.RUNTIME_DIR
+    / "model_comparison_confusion_matrices.csv"
+)
+
 REQUIRED_CLASSES = [0, 1, 2, 3, 4, 5]
 
-MIN_ACCURACY = 0.95
-MAX_ACCURACY_DROP = 0.00
-MIN_RECALL = 0.90
+MIN_ACCURACY = config.RETRAINING_MIN_CANDIDATE_ACCURACY
+MAX_ACCURACY_DROP = config.RETRAINING_MAX_ACCURACY_DROP
+MAX_MACRO_F1_DROP = config.RETRAINING_MAX_MACRO_F1_DROP
+MIN_RECALL = config.RETRAINING_MIN_CLASS_RECALL
 
 REVIEW_ACCURACY_DROP = 0.02
 REVIEW_RECALL_CHANGE = 0.03
@@ -258,8 +287,8 @@ def create_loader(
 def train_candidate(
     x_train,
     y_train,
-    x_test,
-    y_test,
+    x_validation,
+    y_validation,
     num_classes,
     device,
 ):
@@ -328,28 +357,28 @@ def train_candidate(
 
         model.eval()
 
-        test_features = torch.tensor(
-            x_test,
+        validation_features = torch.tensor(
+            x_validation,
             dtype=torch.float32,
         ).to(device)
 
-        test_labels = torch.tensor(
-            y_test,
+        validation_labels = torch.tensor(
+            y_validation,
             dtype=torch.long,
         ).to(device)
 
         with torch.no_grad():
-            test_outputs = model(
-                test_features
+            validation_outputs = model(
+                validation_features
             )
 
-            test_predictions = (
-                test_outputs.argmax(dim=1)
+            validation_predictions = (
+                validation_outputs.argmax(dim=1)
             )
 
-            test_accuracy = (
-                test_predictions
-                == test_labels
+            validation_accuracy = (
+                validation_predictions
+                == validation_labels
             ).float().mean().item()
 
         average_loss = (
@@ -360,8 +389,8 @@ def train_candidate(
             correct_samples / total_samples
         )
 
-        if test_accuracy > best_accuracy:
-            best_accuracy = test_accuracy
+        if validation_accuracy > best_accuracy:
+            best_accuracy = validation_accuracy
             best_state = {
                 key: value.detach().cpu().clone()
                 for key, value in (
@@ -379,8 +408,8 @@ def train_candidate(
                 f"Loss: {average_loss:.4f} | "
                 f"Train accuracy: "
                 f"{train_accuracy * 100:.2f}% | "
-                f"Test accuracy: "
-                f"{test_accuracy * 100:.2f}%"
+                f"Validation accuracy: "
+                f"{validation_accuracy * 100:.2f}%"
             )
 
     if best_state is None:
@@ -469,12 +498,49 @@ def recall_by_class(
     return recalls, matrix
 
 
+def evaluate_sklearn_model(name, model, x_train, y_train, x_test, y_test, classes):
+    started = time.perf_counter()
+    model.fit(x_train, y_train)
+    training_seconds = time.perf_counter() - started
+
+    inference_started = time.perf_counter()
+    predictions = model.predict(x_test)
+    inference_ms = (
+        (time.perf_counter() - inference_started)
+        / len(x_test)
+        * 1000
+    )
+    precision, recall, f1, _ = precision_recall_fscore_support(
+        y_test,
+        predictions,
+        labels=np.arange(len(classes)),
+        zero_division=0,
+    )
+    return {
+        "name": name,
+        "predictions": predictions,
+        "accuracy": accuracy_score(y_test, predictions),
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "matrix": confusion_matrix(
+            y_test,
+            predictions,
+            labels=np.arange(len(classes)),
+        ),
+        "training_seconds": training_seconds,
+        "inference_ms": inference_ms,
+    }
+
+
 def main():
     set_random_seed()
 
     print("Loading original dataset...")
 
-    features, labels = load_original_dataset()
+    data = load_labelled_dataset()
+    features = data[config.FEATURE_COLUMNS].to_numpy(dtype=np.float32)
+    labels = data[config.TARGET_COLUMN].astype(np.int64).to_numpy()
 
     classes = np.sort(
         np.unique(labels)
@@ -507,18 +573,13 @@ def main():
         class_to_index,
     )
 
-    (
-        x_train_original,
-        x_test_original,
-        y_train_original,
-        y_test_original,
-    ) = train_test_split(
-        features,
-        encoded_labels,
-        test_size=TEST_SIZE,
-        random_state=config.RANDOM_STATE,
-        stratify=encoded_labels,
-    )
+    train_indices, validation_indices, test_indices = split_dataframe(data)
+    x_train_original = features[train_indices]
+    x_validation_original = features[validation_indices]
+    x_test_original = features[test_indices]
+    y_train_original = encoded_labels[train_indices]
+    y_validation_original = encoded_labels[validation_indices]
+    y_test_original = encoded_labels[test_indices]
 
     print(
         "Original rows:",
@@ -548,6 +609,17 @@ def main():
     ) = load_verified_buffer(
         classes
     )
+    candidate_source_data = pd.concat(
+        [
+            data[config.FEATURE_COLUMNS + [config.TARGET_COLUMN]],
+            pd.DataFrame(
+                np.column_stack([buffer_features, buffer_labels]),
+                columns=config.FEATURE_COLUMNS + [config.TARGET_COLUMN],
+            ),
+        ],
+        ignore_index=True,
+    )
+    candidate_source_fingerprint = dataset_fingerprint(candidate_source_data)
 
     encoded_buffer_labels = encode_labels(
         buffer_labels,
@@ -608,11 +680,12 @@ def main():
         )
     )
 
-    x_test_scaled_for_candidate = (
+    x_validation_scaled_for_candidate = (
         candidate_scaler.transform(
-            x_test_original
+            x_validation_original
         )
     )
+    x_test_scaled_for_candidate = candidate_scaler.transform(x_test_original)
 
     production_scaler = joblib.load(
         config.SCALER_FILE
@@ -659,6 +732,13 @@ def main():
         y_test_original,
         production_predictions,
     )
+    _, _, production_f1, _ = precision_recall_fscore_support(
+        y_test_original,
+        production_predictions,
+        labels=np.arange(len(classes)),
+        zero_division=0,
+    )
+    production_macro_f1 = float(production_f1.mean())
 
     production_recalls, production_matrix = (
         recall_by_class(
@@ -675,22 +755,32 @@ def main():
 
     print()
     print("Training candidate model...")
+    candidate_training_started = time.perf_counter()
 
     candidate_model, candidate_best_accuracy = (
         train_candidate(
             x_candidate_train_scaled,
             y_candidate_train,
-            x_test_scaled_for_candidate,
-            y_test_original,
+            x_validation_scaled_for_candidate,
+            y_validation_original,
             len(classes),
             device,
         )
     )
+    candidate_training_seconds = (
+        time.perf_counter() - candidate_training_started
+    )
 
+    inference_started = time.perf_counter()
     candidate_predictions = predict_model(
         candidate_model,
         x_test_scaled_for_candidate,
         device,
+    )
+    candidate_inference_ms = (
+        (time.perf_counter() - inference_started)
+        / len(x_test_original)
+        * 1000
     )
 
     candidate_accuracy = accuracy_score(
@@ -705,12 +795,78 @@ def main():
             len(classes),
         )
     )
+    candidate_precision, candidate_recall, candidate_f1, _ = (
+        precision_recall_fscore_support(
+            y_test_original,
+            candidate_predictions,
+            labels=np.arange(len(classes)),
+            zero_division=0,
+        )
+    )
 
     print()
     print(
         "Candidate test accuracy:",
         f"{candidate_accuracy * 100:.2f}%",
     )
+
+    comparison_results = [
+        {
+            "name": "ANN",
+            "accuracy": candidate_accuracy,
+            "precision": candidate_precision,
+            "recall": candidate_recall,
+            "f1": candidate_f1,
+            "matrix": candidate_matrix,
+            "training_seconds": candidate_training_seconds,
+            "inference_ms": candidate_inference_ms,
+        }
+    ]
+
+    print()
+    print("Training Random Forest comparison model...")
+    random_forest_result = evaluate_sklearn_model(
+        "Random Forest",
+        RandomForestClassifier(
+            n_estimators=200,
+            random_state=config.RANDOM_STATE,
+            n_jobs=-1,
+            class_weight="balanced",
+        ),
+        x_candidate_train,
+        y_candidate_train,
+        x_test_original,
+        y_test_original,
+        classes,
+    )
+    comparison_results.append(random_forest_result)
+
+    if XGBClassifier is not None:
+        print("Training XGBoost comparison model...")
+        xgboost_result = evaluate_sklearn_model(
+            "XGBoost",
+            XGBClassifier(
+                n_estimators=200,
+                max_depth=6,
+                learning_rate=0.08,
+                subsample=0.9,
+                colsample_bytree=0.9,
+                objective="multi:softmax",
+                num_class=len(classes),
+                eval_metric="mlogloss",
+                random_state=config.RANDOM_STATE,
+                n_jobs=-1,
+                tree_method="hist",
+            ),
+            x_candidate_train,
+            y_candidate_train,
+            x_test_original,
+            y_test_original,
+            classes,
+        )
+        comparison_results.append(xgboost_result)
+    else:
+        print("XGBoost is unavailable; skipping that comparison.")
 
     print()
     print("Per-class recall comparison:")
@@ -733,7 +889,12 @@ def main():
     )
 
     candidate_not_lower_than_production = bool(
-        candidate_accuracy >= production_accuracy
+        candidate_accuracy >= (
+            production_accuracy - MAX_ACCURACY_DROP
+        )
+        and float(candidate_f1.mean()) >= (
+            production_macro_f1 - MAX_MACRO_F1_DROP
+        )
     )
 
     eligible_for_promotion = bool(
@@ -791,13 +952,19 @@ def main():
         "feature_columns": (
             config.FEATURE_COLUMNS
         ),
-        "training_source": (
-            "original_training_split_plus_"
-            "verified_synthetic_buffer"
-        ),
+        "training_source": "original_training_split_plus_verified_buffer",
         "buffer_rows": int(
             len(buffer_features)
         ),
+        "training_methodology": TRAINING_SPLIT_METHOD,
+        "dataset_fingerprint": dataset_fingerprint(data),
+        "candidate_training_fingerprint": candidate_source_fingerprint,
+        "train_rows": int(len(x_candidate_train)),
+        "validation_rows": int(len(x_validation_original)),
+        "test_rows": int(len(x_test_original)),
+        "best_validation_accuracy": float(candidate_best_accuracy),
+        "final_test_accuracy": float(candidate_accuracy),
+        "test_used_for_model_selection": False,
     }
 
     torch.save(
@@ -852,6 +1019,95 @@ def main():
         index=True,
     )
 
+    comparison_matrix_frames = []
+    for result in comparison_results:
+        frame = pd.DataFrame(
+            result["matrix"],
+            index=[
+                f"{result['name']}_Actual_Fault_{int(value)}"
+                for value in classes
+            ],
+            columns=[
+                f"Predicted_Fault_{int(value)}"
+                for value in classes
+            ],
+        )
+        comparison_matrix_frames.append(frame)
+
+    pd.concat(comparison_matrix_frames).to_csv(
+        MODEL_COMPARISON_MATRIX_FILE,
+        index=True,
+    )
+
+    with open(
+        MODEL_COMPARISON_REPORT_FILE,
+        "w",
+        encoding="utf-8",
+    ) as comparison_file:
+        comparison_file.write(
+            "Leakage-Safe ANN, Random Forest, and XGBoost Comparison\n"
+        )
+        comparison_file.write("=" * 58 + "\n\n")
+        comparison_file.write(
+            "All models use the same original train/validation/test split. "
+            "The verified buffer is added only to the training partition.\n"
+        )
+        comparison_file.write(
+            f"Split methodology: {TRAINING_SPLIT_METHOD}\n"
+        )
+        comparison_file.write(
+            f"Dataset fingerprint: {dataset_fingerprint(data)}\n"
+        )
+        comparison_file.write(
+            f"Candidate training fingerprint: "
+            f"{candidate_source_fingerprint}\n"
+        )
+        comparison_file.write(
+            f"Training rows including verified buffer: {len(x_candidate_train)}\n"
+        )
+        comparison_file.write(
+            f"Validation rows: {len(x_validation_original)}\n"
+        )
+        comparison_file.write(
+            f"Untouched test rows: {len(x_test_original)}\n"
+        )
+        comparison_file.write(
+            "Test set used for model selection: False\n\n"
+        )
+
+        for result in comparison_results:
+            comparison_file.write(f"{result['name']}\n")
+            comparison_file.write("-" * len(result["name"]) + "\n")
+            comparison_file.write(
+                f"Accuracy: {result['accuracy'] * 100:.2f}%\n"
+            )
+            comparison_file.write(
+                f"Macro precision: {result['precision'].mean() * 100:.2f}%\n"
+            )
+            comparison_file.write(
+                f"Macro recall: {result['recall'].mean() * 100:.2f}%\n"
+            )
+            comparison_file.write(
+                f"Macro F1: {result['f1'].mean() * 100:.2f}%\n"
+            )
+            comparison_file.write(
+                f"Training duration seconds: "
+                f"{result['training_seconds']:.3f}\n"
+            )
+            comparison_file.write(
+                f"Inference latency milliseconds per record: "
+                f"{result['inference_ms']:.4f}\n"
+            )
+            comparison_file.write("Per-class precision/recall/F1:\n")
+            for index, class_value in enumerate(classes):
+                comparison_file.write(
+                    f"Fault {int(class_value)}: "
+                    f"precision={result['precision'][index] * 100:.2f}%, "
+                    f"recall={result['recall'][index] * 100:.2f}%, "
+                    f"F1={result['f1'][index] * 100:.2f}%\n"
+                )
+            comparison_file.write("\n")
+
     with open(
         COMPARISON_REPORT_FILE,
         "w",
@@ -871,8 +1127,24 @@ def main():
             f"{len(x_train_original)}\n"
         )
         file.write(
+            f"Original validation rows: "
+            f"{len(x_validation_original)}\n"
+        )
+        file.write(
             f"Untouched original test rows: "
             f"{len(x_test_original)}\n"
+        )
+        file.write(
+            f"Dataset fingerprint: "
+            f"{dataset_fingerprint(data)}\n"
+        )
+        file.write(
+            f"Split methodology: "
+            f"{TRAINING_SPLIT_METHOD}\n"
+        )
+        file.write(
+            f"Candidate training fingerprint: "
+            f"{candidate_source_fingerprint}\n"
         )
         file.write(
             f"Verified buffer rows: "
@@ -893,8 +1165,36 @@ def main():
         )
         file.write(
             "Best candidate accuracy during "
-            "training: "
+            "validation selection: "
             f"{candidate_best_accuracy * 100:.2f}%\n\n"
+        )
+        file.write(
+            "Test set used for candidate checkpoint selection: False\n"
+        )
+        file.write(
+            "Historical comparison note: the previously existing "
+            "candidate_comparison_report.txt was produced by the prior "
+            "test-selection methodology and is intentionally preserved.\n\n"
+        )
+        file.write(
+            f"Candidate training duration seconds: "
+            f"{candidate_training_seconds:.3f}\n"
+        )
+        file.write(
+            f"Candidate inference latency milliseconds per record: "
+            f"{candidate_inference_ms:.4f}\n"
+        )
+        file.write(
+            f"Candidate macro precision: "
+            f"{candidate_precision.mean() * 100:.2f}%\n"
+        )
+        file.write(
+            f"Candidate macro recall: "
+            f"{candidate_recall.mean() * 100:.2f}%\n"
+        )
+        file.write(
+            f"Candidate macro F1: "
+            f"{candidate_f1.mean() * 100:.2f}%\n\n"
         )
 
         file.write(
@@ -920,6 +1220,16 @@ def main():
             f"{MAX_ACCURACY_DROP * 100:.2f}%\n"
         )
         file.write(
+            "Candidate macro F1 drop <= "
+            f"{MAX_MACRO_F1_DROP * 100:.2f}%\n"
+        )
+        file.write(
+            f"Production macro F1: {production_macro_f1 * 100:.2f}%\n"
+        )
+        file.write(
+            f"Candidate macro F1: {candidate_f1.mean() * 100:.2f}%\n"
+        )
+        file.write(
             "Every candidate class recall >= "
             f"{MIN_RECALL * 100:.2f}%\n\n"
         )
@@ -935,6 +1245,41 @@ def main():
             "Candidate classification report\n"
         )
         file.write(candidate_report)
+
+    with open(
+        CANDIDATE_METADATA_FILE,
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(
+            {
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+                "candidate_artifact": str(CANDIDATE_MODEL_FILE),
+                "decision": decision,
+                "eligible_for_promotion": eligible_for_promotion,
+                "accuracy": float(candidate_accuracy),
+                "macro_precision": float(candidate_precision.mean()),
+                "macro_recall": float(candidate_recall.mean()),
+                "macro_f1": float(candidate_f1.mean()),
+                "minimum_class_recall": float(candidate_recalls.min()),
+                "best_validation_accuracy": float(candidate_best_accuracy),
+                "test_used_for_model_selection": False,
+                "dataset_fingerprint": dataset_fingerprint(data),
+                "candidate_training_fingerprint": candidate_source_fingerprint,
+                "split_methodology": TRAINING_SPLIT_METHOD,
+                "production_accuracy": float(production_accuracy),
+                "production_macro_f1": production_macro_f1,
+                "accuracy_drop": float(production_accuracy - candidate_accuracy),
+                "macro_f1_drop": float(
+                    production_macro_f1 - float(candidate_f1.mean())
+                ),
+                "training_rows": len(x_candidate_train),
+                "validation_rows": len(x_validation_original),
+                "test_rows": len(x_test_original),
+            },
+            file,
+            indent=2,
+        )
 
     print()
     print("Saved candidate files:")

@@ -1,0 +1,2740 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Industrial Digital Twin SCADA Center — DC Series Motor Condition Monitoring, Predictive Maintenance, and Physical Diagnostics.">
+    <title>DC Series Motor M-01 · Industrial Digital Twin Workstation</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+    <style>
+        /* ====================================================
+           PREMIUM INDUSTRIAL LIGHT THEME (DRIBBLE / SAAS GRADE)
+           Layered Glassmorphism, Vibrant Gradients & 2D Vector CAD
+           ==================================================== */
+
+        :root {
+            --bg-canvas:       #F0F4F9;
+            --bg-surface:      rgba(255, 255, 255, 0.92);
+            --bg-surface-alt:  #F8FAFC;
+            --bg-glass:        rgba(255, 255, 255, 0.75);
+            --bg-sidebar:      #FFFFFF;
+
+            --border-subtle:   #E2E8F0;
+            --border-card:     rgba(226, 232, 240, 0.85);
+            --border-hover:    #93C5FD;
+
+            --text-heading:    #0B132B;
+            --text-body:       #334155;
+            --text-muted:      #64748B;
+            --text-light:      #94A3B8;
+
+            --brand-primary:   #2563EB; /* Vivid Electric Blue */
+            --brand-gradient:  linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+            --accent-cyan:     #0284C7;
+            --accent-green:    #10B981;
+            --accent-amber:    #F59E0B;
+            --accent-orange:   #EA580C;
+            --accent-red:      #EF4444;
+            --accent-purple:   #8B5CF6;
+
+            --shadow-subtle:   0 2px 4px rgba(15, 23, 42, 0.04);
+            --shadow-card:     0 10px 25px -5px rgba(15, 23, 42, 0.05), 0 8px 10px -6px rgba(15, 23, 42, 0.03);
+            --shadow-hover:    0 20px 30px -10px rgba(37, 99, 235, 0.12), 0 10px 10px -5px rgba(15, 23, 42, 0.04);
+            --shadow-glow-blue: 0 0 20px rgba(37, 99, 235, 0.25);
+            --shadow-glow-green: 0 0 20px rgba(16, 185, 129, 0.25);
+
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-xl: 24px;
+
+            --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-canvas);
+            color: var(--text-body);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 100% 0%, rgba(37, 99, 235, 0.07) 0px, transparent 50%),
+                radial-gradient(at 0% 100%, rgba(16, 185, 129, 0.06) 0px, transparent 50%),
+                radial-gradient(at 50% 50%, rgba(245, 158, 11, 0.03) 0px, transparent 60%),
+                linear-gradient(#E2E8F0 1.2px, transparent 1.2px),
+                linear-gradient(90deg, #E2E8F0 1.2px, transparent 1.2px);
+            background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-canvas); }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 6px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
+
+        /* ── Master App Layout ─────────────────────────────── */
+        .app-container {
+            position: relative;
+            display: grid;
+            grid-template-columns: 270px 1fr;
+            min-height: 100vh;
+        }
+
+        /* ── Sidebar ───────────────────────────────────────── */
+        .sidebar {
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border-subtle);
+            padding: 1.4rem 1.1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            box-shadow: 4px 0 24px rgba(15, 23, 42, 0.02);
+            z-index: 50;
+        }
+
+        .sidebar-brand {
+            padding-bottom: 1.2rem;
+            margin-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        .brand-logo-badge {
+            width: 44px; height: 44px;
+            border-radius: var(--radius-md);
+            background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            color: #FFFFFF;
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+        }
+
+        .sidebar-brand h2 {
+            font-size: 1.02rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--text-heading);
+            line-height: 1.2;
+        }
+
+        .sidebar-brand p {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        .sidebar-section-label {
+            font-size: 0.66rem;
+            font-weight: 800;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin: 0.8rem 0 0.35rem 0.5rem;
+        }
+
+        .mode-selector {
+            background: #F8FAFC;
+            border: 1px solid var(--border-subtle);
+            color: var(--text-heading);
+            font-size: 0.76rem;
+            font-weight: 700;
+            padding: 0.65rem 0.85rem;
+            border-radius: var(--radius-md);
+            outline: none;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 0.6rem;
+            transition: var(--transition);
+        }
+
+        .mode-selector:hover, .mode-selector:focus {
+            border-color: var(--brand-primary);
+            background: #FFFFFF;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        .sidebar-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.7rem 0.95rem;
+            border-radius: var(--radius-md);
+            color: var(--text-body);
+            font-size: 0.82rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid transparent;
+            user-select: none;
+        }
+
+        .sidebar-nav-item:hover {
+            background: #F1F5F9;
+            color: var(--text-heading);
+            transform: translateX(2px);
+        }
+
+        .sidebar-nav-item.active {
+            background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
+            color: var(--brand-primary);
+            border-color: #BFDBFE;
+            font-weight: 800;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+        }
+
+        .sidebar-nav-icon {
+            font-size: 1.1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-nav-badge {
+            margin-left: auto;
+            font-size: 0.62rem;
+            font-weight: 800;
+            padding: 0.15rem 0.5rem;
+            border-radius: 999px;
+            background: #DCFCE7;
+            color: #15803D;
+            border: 1px solid #BBF7D0;
+        }
+
+        .sidebar-status {
+            margin-top: auto;
+            background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.85rem;
+        }
+
+        .sidebar-status-header {
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            margin-bottom: 0.35rem;
+        }
+
+        .sidebar-status-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25);
+            animation: pulseDot 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(0.85); opacity: 0.6; }
+        }
+
+        .sidebar-status-text {
+            font-weight: 800;
+            color: var(--text-heading);
+            font-size: 0.72rem;
+            letter-spacing: 0.02em;
+        }
+
+        .sidebar-clock {
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.74rem;
+            font-weight: 600;
+        }
+
+        /* ── Top Bar (Floating Glassmorphic Header) ─────────── */
+        .top-bar {
+            background: rgba(255, 255, 255, 0.88);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0.95rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+        }
+
+        .top-bar-left h1 {
+            font-size: 1.22rem;
+            font-weight: 900;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            letter-spacing: -0.02em;
+        }
+
+        .top-bar-left p {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: 0.15rem;
+        }
+
+        .top-bar-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-control {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.52rem 0.95rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-subtle);
+            background: #FFFFFF;
+            color: var(--text-body);
+            font-size: 0.76rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .btn-control:hover {
+            border-color: var(--brand-primary);
+            color: var(--brand-primary);
+            background: #F8FAFC;
+            transform: translateY(-1px);
+        }
+
+        .btn-control.active {
+            border-color: var(--brand-primary);
+            color: #FFFFFF;
+            background: var(--brand-gradient);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+        }
+
+        /* ── KPI Pill Strip ────────────────────────────────── */
+        .kpi-strip {
+            display: flex;
+            gap: 0.55rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .kpi-chip {
+            background: #FFFFFF;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-sm);
+            padding: 0.42rem 0.8rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .kpi-chip-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+        }
+
+        .kpi-chip-val {
+            font-weight: 800;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-heading);
+        }
+
+        /* ── Main Workspace ────────────────────────────────── */
+        .main-content {
+            padding: 1.6rem 2rem 3.5rem 2rem;
+            max-width: 1650px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.25s ease-out; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Section Titles ────────────────────────────────── */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 1.5rem 0 0.9rem 0;
+        }
+
+        .section-title {
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--text-heading);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+        }
+
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 5px; height: 15px;
+            background: var(--brand-primary);
+            border-radius: 3px;
+        }
+
+        /* ── Vibrant Glossy Alarm Banners ──────────────────── */
+        .alarm-banner {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            padding: 1.05rem 1.4rem;
+            border-radius: var(--radius-lg);
+            margin-bottom: 1.3rem;
+            font-size: 0.85rem;
+            font-weight: 600;
+            line-height: 1.5;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .alarm-banner.critical {
+            background: linear-gradient(135deg, #FEF2F2 0%, #FEE2E2 100%);
+            border-color: #FCA5A5;
+            color: #991B1B;
+            animation: bannerPulseRed 2s infinite ease-in-out;
+        }
+
+        @keyframes bannerPulseRed {
+            0%, 100% { border-color: #FCA5A5; }
+            50% { border-color: #EF4444; }
+        }
+
+        .alarm-banner.warning {
+            background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+            border-color: #FCD34D;
+            color: #92400E;
+        }
+
+        .alarm-banner.normal {
+            background: linear-gradient(135deg, #F0FDF4 0%, #DCFCE7 100%);
+            border-color: #86EFAC;
+            color: #166534;
+        }
+
+        .alarm-banner-icon {
+            font-size: 1.45rem;
+            line-height: 1;
+        }
+
+        .alarm-banner-content h4 {
+            font-size: 0.92rem;
+            font-weight: 900;
+            letter-spacing: -0.01em;
+            margin-bottom: 0.2rem;
+        }
+
+        .alarm-banner-content p {
+            font-size: 0.82rem;
+            font-weight: 500;
+            opacity: 0.95;
+        }
+
+        /* ── Plain English Diagnosis Card ──────────────────── */
+        .plain-english-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem 1.8rem;
+            margin-bottom: 1.4rem;
+            box-shadow: var(--shadow-card);
+            display: grid;
+            grid-template-columns: 2.2fr 1fr;
+            gap: 1.8rem;
+            position: relative;
+            border-top: 4px solid var(--brand-primary);
+        }
+
+        .pe-left h3 {
+            font-size: 0.78rem;
+            font-weight: 900;
+            color: var(--brand-primary);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 0.55rem;
+            display: flex;
+            align-items: center;
+            gap: 0.45rem;
+        }
+
+        .pe-summary-text {
+            font-size: 1.02rem;
+            font-weight: 700;
+            line-height: 1.55;
+            color: var(--text-heading);
+            margin-bottom: 1rem;
+        }
+
+        .pe-actions-title {
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.45rem;
+        }
+
+        .pe-actions-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+        }
+
+        .pe-actions-list li {
+            font-size: 0.82rem;
+            color: var(--text-body);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.55rem;
+            line-height: 1.45;
+            font-weight: 500;
+        }
+
+        .pe-actions-list li::before {
+            content: '✓';
+            font-size: 0.8rem;
+            font-weight: 900;
+            color: var(--accent-green);
+        }
+
+        .pe-right {
+            border-left: 1px solid var(--border-subtle);
+            padding-left: 1.6rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .iso-meter-box {
+            background: #F8FAFC;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 1.1rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .iso-meter-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.7rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .iso-bar-container {
+            position: relative;
+            height: 14px;
+            border-radius: 7px;
+            display: flex;
+            overflow: hidden;
+            background: #E2E8F0;
+            margin-bottom: 0.5rem;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.08);
+        }
+
+        .iso-segment { height: 100%; }
+        .iso-seg-a { width: 35%; background: linear-gradient(90deg, #10B981, #059669); }
+        .iso-seg-b { width: 25%; background: linear-gradient(90deg, #0284C7, #0369A1); }
+        .iso-seg-c { width: 25%; background: linear-gradient(90deg, #F59E0B, #D97706); }
+        .iso-seg-d { width: 15%; background: linear-gradient(90deg, #EF4444, #B91C1C); }
+
+        .iso-pointer {
+            position: absolute;
+            top: -4px;
+            width: 5px;
+            height: 22px;
+            background: #0B132B;
+            border-radius: 3px;
+            box-shadow: 0 0 6px rgba(0,0,0,0.5);
+            transition: left 0.35s ease;
+        }
+
+        .iso-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            font-weight: 700;
+        }
+
+        /* ── Modern Dribbble Gauge Cards ───────────────────── */
+        .gauge-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .gauge-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 0.8rem 0.6rem 0.9rem 0.6rem;
+            text-align: center;
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .gauge-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 3px;
+            background: var(--brand-gradient);
+            opacity: 0.8;
+        }
+
+        .gauge-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-3px);
+        }
+
+        .gauge-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-bottom: 0.2rem;
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .gauge-sub-info {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            margin-top: -0.2rem;
+        }
+
+        /* ── 2D Digital Twin & Inspector Section ───────────── */
+        .schematic-row {
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 1.2rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .schematic-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem 1.7rem;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            border-top: 4px solid #0284C7;
+        }
+
+        .schematic-top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.9rem;
+        }
+
+        .schematic-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            padding: 0.32rem 0.8rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #EFF6FF, #DBEAFE);
+            color: var(--brand-primary);
+            border: 1px solid #BFDBFE;
+            box-shadow: var(--shadow-subtle);
+        }
+
+        .schematic-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 280px;
+            background: radial-gradient(circle at center, #FFFFFF 0%, #F8FAFC 100%);
+            border-radius: var(--radius-lg);
+            border: 1px solid #E2E8F0;
+            padding: 1rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        /* ── 2D SVG Smooth Animations ──────────────────────── */
+        @keyframes motorSpinAnimation2D {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes currentFluxPulse2D {
+            0% { stroke-dashoffset: 40; }
+            100% { stroke-dashoffset: 0; }
+        }
+
+        @keyframes chassisVibrate2D {
+            0% { transform: translate(0, 0); }
+            25% { transform: translate(-1.2px, 0.8px); }
+            50% { transform: translate(1px, -1px); }
+            75% { transform: translate(-0.8px, -0.6px); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .motor-vibrating-2d {
+            animation: chassisVibrate2D 0.12s infinite linear;
+        }
+
+        .flux-flowing-2d {
+            stroke-dasharray: 6 6;
+            animation: currentFluxPulse2D 0.5s infinite linear;
+        }
+
+        /* ── Component Inspector Drawer ────────────────────── */
+        .inspector-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-xl);
+            padding: 1.5rem;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            border-top: 4px solid var(--accent-green);
+        }
+
+        .component-grid-mini {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 0.6rem;
+            max-height: 290px;
+            overflow-y: auto;
+            padding-right: 0.3rem;
+        }
+
+        .comp-item {
+            background: #F8FAFC;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-md);
+            padding: 0.75rem 0.95rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .comp-item:hover, .comp-item.selected {
+            border-color: var(--brand-primary);
+            background: #EFF6FF;
+            transform: translateX(2px);
+        }
+
+        .comp-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .comp-status-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+        }
+
+        .comp-status-dot.healthy { background: var(--accent-green); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+        .comp-status-dot.warning { background: var(--accent-amber); box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2); }
+        .comp-status-dot.critical { background: var(--accent-red); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2); }
+
+        .comp-name {
+            font-size: 0.82rem;
+            font-weight: 800;
+            color: var(--text-heading);
+        }
+
+        .comp-desc {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 0.15rem;
+        }
+
+        .comp-metric {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--brand-primary);
+            text-align: right;
+        }
+
+        /* ── Metric Summary Grid ───────────────────────────── */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .metric-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 1.1rem 1.3rem;
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .metric-value {
+            font-size: 1.55rem;
+            font-weight: 900;
+            color: var(--text-heading);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 0.3rem;
+            letter-spacing: -0.02em;
+        }
+
+        /* ── Student Hub Page (Light Mode) ─────────────────── */
+        .student-hub-hero {
+            background: linear-gradient(135deg, #EFF6FF 0%, #FFFFFF 100%);
+            border: 1px solid #DBEAFE;
+            border-radius: var(--radius-xl);
+            padding: 2rem 2.4rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-card);
+            border-left: 5px solid var(--brand-primary);
+        }
+
+        .student-hub-hero h2 {
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: var(--text-heading);
+            margin-bottom: 0.55rem;
+            letter-spacing: -0.02em;
+        }
+
+        .student-hub-hero p {
+            font-size: 0.9rem;
+            color: var(--text-body);
+            line-height: 1.65;
+            max-width: 950px;
+        }
+
+        .principles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .principle-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            padding: 1.3rem;
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+        }
+
+        .principle-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .principle-card-icon {
+            font-size: 1.8rem;
+            margin-bottom: 0.55rem;
+        }
+
+        .principle-card h4 {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: var(--text-heading);
+            margin-bottom: 0.35rem;
+        }
+
+        .principle-card p {
+            font-size: 0.8rem;
+            color: var(--text-body);
+            line-height: 1.55;
+        }
+
+        .fault-encyclopedia-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 1.8rem;
+        }
+
+        .fault-encyclopedia-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-xl);
+            padding: 1.4rem;
+            box-shadow: var(--shadow-card);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .fault-encyclopedia-card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-3px);
+        }
+
+        .fault-enc-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 0.75rem;
+        }
+
+        .fault-enc-title {
+            font-size: 0.96rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 0.55rem;
+            color: var(--text-heading);
+        }
+
+        .fault-enc-badge {
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 0.22rem 0.6rem;
+            border-radius: 999px;
+            text-transform: uppercase;
+        }
+
+        .fault-enc-field {
+            font-size: 0.8rem;
+            line-height: 1.55;
+            color: var(--text-body);
+        }
+
+        .fault-enc-field strong {
+            display: block;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.2rem;
+            color: var(--brand-primary);
+            font-weight: 800;
+        }
+
+        .analogy-box {
+            background: #F0FDF4;
+            border-left: 3px solid var(--accent-green);
+            padding: 0.65rem 0.95rem;
+            border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+            font-size: 0.8rem;
+            color: #166534;
+            font-style: italic;
+            line-height: 1.5;
+        }
+
+        /* ── Tables & Log Scrolls ──────────────────────────── */
+        .records-scroll {
+            max-height: 380px;
+            overflow-y: auto;
+            border: 1px solid var(--border-card);
+            border-radius: var(--radius-lg);
+            background: #FFFFFF;
+            box-shadow: var(--shadow-card);
+        }
+
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+        }
+
+        .records-table th {
+            text-align: left;
+            padding: 0.75rem 0.95rem;
+            font-size: 0.68rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-subtle);
+            position: sticky;
+            top: 0;
+            background: #F8FAFC;
+            z-index: 10;
+        }
+
+        .records-table td {
+            padding: 0.6rem 0.95rem;
+            border-bottom: 1px solid #F1F5F9;
+            color: var(--text-body);
+        }
+
+        .records-table tr:hover td {
+            background: #F8FAFC;
+        }
+
+        .records-table .mono {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.76rem;
+        }
+
+        .severity-badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 999px;
+            font-size: 0.64rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .severity-badge.critical { background: #FEE2E2; color: #DC2626; border: 1px solid #FECACA; }
+        .severity-badge.major { background: #FFEDD5; color: #EA580C; border: 1px solid #FED7AA; }
+        .severity-badge.minor { background: #FEF3C7; color: #D97706; border: 1px solid #FDE68A; }
+
+        /* ── Modal for Shift Report ────────────────────────── */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-xl);
+            max-width: 760px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            padding-bottom: 1rem;
+            margin-bottom: 1.2rem;
+        }
+
+        .modal-close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-close-btn:hover { color: var(--text-heading); }
+
+        /* ── Responsive Breakdown ──────────────────────────── */
+        @media (max-width: 1200px) {
+            .gauge-grid { grid-template-columns: repeat(3, 1fr); }
+            .schematic-row { grid-template-columns: 1fr; }
+            .metric-grid { grid-template-columns: repeat(2, 1fr); }
+            .fault-encyclopedia-grid { grid-template-columns: 1fr; }
+            .plain-english-card { grid-template-columns: 1fr; }
+            .pe-right { border-left: none; border-top: 1px solid var(--border-subtle); padding-left: 0; padding-top: 1rem; }
+        }
+
+        @media (max-width: 768px) {
+            .app-container { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .gauge-grid { grid-template-columns: repeat(2, 1fr); }
+            .principles-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <!-- ══════ SIDEBAR NAVIGATION ══════ -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-logo-badge">⚡</div>
+            <div>
+                <h2>Motor Twin</h2>
+                <p>DC Series M-01 · SCADA</p>
+            </div>
+        </div>
+
+        <div class="sidebar-section-label">Data Telemetry Stream</div>
+        <select class="mode-selector" id="mode-selector" aria-label="Select Telemetry Stream">
+            <option value="simulation">📡 Simulation Dataset Stream</option>
+            <option value="real_motor">⚙️ Local Real Motor Stream</option>
+            <option value="firebase">🔥 Firebase Cloud Live Stream</option>
+        </select>
+
+        <div class="sidebar-section-label">Workstation Navigation</div>
+        <div class="sidebar-nav-item active" data-page="overview" id="nav-overview">
+            <span class="sidebar-nav-icon">📊</span> Overview SCADA
+        </div>
+        <div class="sidebar-nav-item" data-page="live" id="nav-live">
+            <span class="sidebar-nav-icon">🔴</span> Live 2D Digital Twin
+        </div>
+        <div class="sidebar-nav-item" data-page="student-hub" id="nav-student-hub">
+            <span class="sidebar-nav-icon">🎓</span> Student Anatomy & Guide
+            <span class="sidebar-nav-badge">NEW</span>
+        </div>
+        <div class="sidebar-nav-item" data-page="trends" id="nav-trends">
+            <span class="sidebar-nav-icon">📈</span> Telemetry Trends
+        </div>
+        <div class="sidebar-nav-item" data-page="alarms" id="nav-alarms">
+            <span class="sidebar-nav-icon">🚨</span> Alarm Management
+        </div>
+        <div class="sidebar-nav-item" data-page="governance" id="nav-governance">
+            <span class="sidebar-nav-icon">🔒</span> Model Governance
+        </div>
+        <div class="sidebar-nav-item" data-page="health" id="nav-health">
+            <span class="sidebar-nav-icon">🩺</span> Data Quality Health
+        </div>
+
+        <div class="sidebar-status">
+            <div class="sidebar-status-header">
+                <span class="sidebar-status-dot"></span>
+                <span class="sidebar-status-text" id="sidebar-telemetry-badge">TELEMETRY LIVE</span>
+            </div>
+            <div class="sidebar-clock" id="sidebar-clock">--:--:--</div>
+        </div>
+    </aside>
+
+    <!-- ══════ TOP HEADER BAR ══════ -->
+    <div style="display: flex; flex-direction: column;">
+        <header class="top-bar">
+            <div class="top-bar-left">
+                <h1>
+                    <span>DC Series Motor M-01</span>
+                    <span style="font-size:0.7rem; font-weight:800; padding:0.25rem 0.65rem; border-radius:999px; background:#EFF6FF; color:var(--brand-primary); border:1px solid #BFDBFE;">
+                        ISO 10816 CLASS II
+                    </span>
+                </h1>
+                <p>Industrial Condition Monitoring · Predictive Diagnostics · Physical Digital Twin</p>
+            </div>
+
+            <div class="top-bar-controls">
+                <button class="btn-control" id="btn-audio-toggle" title="Toggle audio alert on warning/critical events">
+                    <span id="audio-icon">🔊</span>
+                    <span id="audio-text">Audio: Active</span>
+                </button>
+                <button class="btn-control" id="btn-export-report" title="Generate printable shift report">
+                    <span>📋</span>
+                    <span>Shift Report</span>
+                </button>
+            </div>
+
+            <div class="kpi-strip" id="kpi-strip">
+                <!-- Dynamically populated -->
+            </div>
+        </header>
+
+        <!-- ══════ MAIN WORKSPACE CONTENT ══════ -->
+        <main class="main-content">
+
+            <!-- ── PAGE 1: OVERVIEW SCADA ── -->
+            <div class="page active" id="page-overview">
+                <!-- Dynamic Alarm Banner -->
+                <div id="alarm-banner-overview"></div>
+
+                <!-- 2D Animated Digital Twin (NOW AT TOP FOR MAXIMUM IMPACT) -->
+                <div class="gauge-card simulation-control-card">
+                    <div class="section-header" style="margin-bottom:0.6rem;">
+                        <div>
+                            <div class="section-title">Dataset Telemetry Simulator</div>
+                            <div style="font-size:0.72rem;color:var(--text-muted);">Source records remain unchanged. One exact dataset record is shared by the twin and log.</div>
+                        </div>
+                        <span class="schematic-badge" id="simulation-mode-badge">SIMULATION MODE · STOPPED</span>
+                    </div>
+                    <div style="display:flex;flex-wrap:wrap;gap:0.55rem;align-items:center;">
+                        <button class="btn-control active" id="simulation-start">▶ Start</button>
+                        <button class="btn-control" id="simulation-pause">⏸ Pause</button>
+                        <button class="btn-control" id="simulation-resume">↻ Resume</button>
+                        <button class="btn-control" id="simulation-stop">■ Stop</button>
+                        <button class="btn-control" id="simulation-clear-log">✕ Clear Log</button>
+                        <label style="font-size:0.74rem;font-weight:800;color:var(--text-muted);margin-left:auto;">
+                            Demonstrate dataset label:
+                            <select id="simulation-fault-filter" class="mode-selector" style="display:inline-block;width:auto;margin:0 0 0 0.3rem;padding:0.35rem 0.55rem;">
+                                <option value="all">All available codes</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div id="simulation-control-message" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.55rem;">Press Start to begin dataset-backed telemetry.</div>
+                </div>
+                <div class="schematic-row">
+                    <div class="schematic-card">
+                        <div class="schematic-top-bar">
+                            <div class="section-title">2D Vector Digital Twin Cutaway (Live Animated)</div>
+                            <span class="schematic-badge" id="schematic-speed-badge">SPIN: 1500 RPM · STEADY</span>
+                        </div>
+                        <div class="schematic-container" id="motor-svg-overview"></div>
+                    </div>
+
+                    <div class="inspector-card">
+                        <div class="section-title">Subsystem Health Inspector</div>
+                        <p style="font-size:0.74rem; color:var(--text-muted);">
+                            Click any component below or on the 2D cutaway to view physical role & live telemetry:
+                        </p>
+                        <div class="component-grid-mini" id="component-inspector-grid"></div>
+                        <div id="component-drilldown-detail" style="background:#F8FAFC; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:0.85rem; font-size:0.76rem;">
+                            <strong style="color:var(--brand-primary); display:block; margin-bottom:0.25rem;" id="detail-comp-title">Drive-End (DE) Bearing</strong>
+                            <p style="color:var(--text-body); line-height:1.45;" id="detail-comp-desc">
+                                Inspecting front shaft support bearing raceway and lubrication integrity.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-header">
+                    <div class="section-title">Real-Time Telemetry Log</div>
+                    <div id="simulation-log-status" style="font-size:0.72rem;color:var(--text-muted);">0 retained records</div>
+                </div>
+                <div class="records-scroll" id="simulation-telemetry-log"></div>
+
+                <!-- Plain English Operator / Student Diagnostic Interpreter -->
+                <div class="plain-english-card" id="plain-english-overview">
+                    <div class="pe-left">
+                        <h3><span>💡</span> Condition Diagnostic Summary (Plain English)</h3>
+                        <p class="pe-summary-text" id="pe-summary-text">Analyzing continuous sensor telemetry...</p>
+                        <div class="pe-actions-title">Recommended Engineering Actions:</div>
+                        <ul class="pe-actions-list" id="pe-actions-list">
+                            <li>Performing baseline vibration and thermal scans.</li>
+                        </ul>
+                    </div>
+                    <div class="pe-right">
+                        <div class="iso-meter-box">
+                            <div class="iso-meter-title">
+                                <span>ISO 10816 Vibration Severity</span>
+                                <span id="iso-zone-label" style="color:var(--accent-green); font-weight:800;">ZONE A</span>
+                            </div>
+                            <div class="iso-bar-container">
+                                <div class="iso-segment iso-seg-a" title="Zone A: Good (0 - 1.8g)"></div>
+                                <div class="iso-segment iso-seg-b" title="Zone B: Acceptable (1.8 - 2.8g)"></div>
+                                <div class="iso-segment iso-seg-c" title="Zone C: Alert (2.8 - 4.5g)"></div>
+                                <div class="iso-segment iso-seg-d" title="Zone D: Danger (> 4.5g)"></div>
+                                <div class="iso-pointer" id="iso-pointer" style="left: 15%;"></div>
+                            </div>
+                            <div class="iso-labels">
+                                <span>0g (Good)</span>
+                                <span>1.8g</span>
+                                <span>2.8g</span>
+                                <span>4.5g (Hazard)</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5 SCADA Dials / Gauges -->
+                <div class="section-header">
+                    <div class="section-title">Telemetry Sensor Gauges</div>
+                </div>
+                <div class="gauge-grid" id="gauge-grid"></div>
+
+                <!-- Operational Metrics Strip -->
+                <div class="section-header">
+                    <div class="section-title">Operational Health Metrics</div>
+                </div>
+                <div class="metric-grid" id="status-metrics"></div>
+
+                <!-- Simulation Verification -->
+                <div id="simulation-verification"></div>
+
+                <!-- Recent Records Table -->
+                <div class="section-header">
+                    <div class="section-title">Sensor Telemetry Stream (Last 25 Records)</div>
+                </div>
+                <div class="records-scroll" id="recent-records"></div>
+            </div>
+
+            <!-- ── PAGE 2: LIVE 2D DIGITAL TWIN ── -->
+            <div class="page" id="page-live">
+                <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:1rem;">
+                    <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--accent-red);animation:pulseCriticalLight 1.5s infinite;"></span>
+                    <span style="font-size:0.78rem;font-weight:800;color:var(--accent-red);letter-spacing:0.06em;">LIVE HIGH-FREQUENCY 2D DIGITAL TWIN</span>
+                    <span id="live-refresh-time" style="font-size:0.7rem;color:var(--text-muted);margin-left:auto;font-family:'JetBrains Mono',monospace;"></span>
+                </div>
+
+                <div id="alarm-banner-live"></div>
+                
+                <div class="schematic-row">
+                    <div class="schematic-card">
+                        <div class="schematic-top-bar">
+                            <div class="section-title">2D Digital Twin Animation</div>
+                            <span class="schematic-badge" id="live-schematic-status">RPM SYNCED</span>
+                        </div>
+                        <div class="schematic-container" id="motor-svg-live"></div>
+                    </div>
+
+                    <div class="inspector-card">
+                        <div class="section-title">Live Sensor Instrumentation</div>
+                        <div id="sensor-table-live"></div>
+                    </div>
+                </div>
+
+                <div class="gauge-grid" id="gauge-grid-live"></div>
+                <div id="simulation-verification-live"></div>
+                
+                <div class="section-header">
+                    <div class="section-title">Live Operational Records</div>
+                </div>
+                <div class="records-scroll" id="recent-records-live"></div>
+            </div>
+
+            <!-- ── PAGE 3: STUDENT HUB & ANATOMY GUIDE ── -->
+            <div class="page" id="page-student-hub">
+                <div class="student-hub-hero">
+                    <h2>DC Series Motor Anatomy & Physical Guide</h2>
+                    <p>
+                        Designed for engineering students, operators, and non-data science researchers. Understand the physical construction of a DC series motor, why each sensor is installed, what happens physically when a fault develops, and how industrial plants keep equipment safe.
+                    </p>
+                </div>
+
+                <!-- Section: Physics & Engineering -->
+                <div class="section-header">
+                    <div class="section-title">Core Operating Principles of DC Series Motors</div>
+                </div>
+                <div class="principles-grid">
+                    <div class="principle-card">
+                        <div class="principle-card-icon">🧲</div>
+                        <h4>1. Series Field Connection</h4>
+                        <p>
+                            The field winding is connected in series with the armature winding ($I_{field} = I_{armature}$). At startup, high current produces massive magnetic flux, giving exceptional starting torque — ideal for electric locomotives, cranes, and heavy winches.
+                        </p>
+                    </div>
+                    <div class="principle-card">
+                        <div class="principle-card-icon">⚡</div>
+                        <h4>2. Inverse Speed vs Torque</h4>
+                        <p>
+                            As mechanical load increases, the motor slows down while pulling more torque. Warning: If uncoupled from all mechanical load, speed can accelerate dangerously ("runaway"), which is why speed monitoring (RPM) is critical.
+                        </p>
+                    </div>
+                    <div class="principle-card">
+                        <div class="principle-card-icon">🛡️</div>
+                        <h4>3. Why Condition Monitoring Matters</h4>
+                        <p>
+                            Unplanned motor breakdown halts entire assembly lines. Vibration sensors detect bearing and alignment flaws weeks before catastrophic seizure, while temperature sensors prevent fire hazards and coil insulation burnout.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Section: Fault Encyclopedia -->
+                <div class="section-header">
+                    <div class="section-title">Industrial Fault Encyclopedia (6 Machine States)</div>
+                </div>
+                <div class="fault-encyclopedia-grid" id="fault-encyclopedia-cards">
+                    <!-- Populated dynamically from API -->
+                </div>
+            </div>
+
+            <!-- ── PAGE 4: TRENDS ── -->
+            <div class="page" id="page-trends">
+                <div class="section-header">
+                    <div class="section-title">Continuous Telemetry Multi-Sensor Trends</div>
+                    <div class="range-selector" id="trend-range-selector">
+                        <button class="btn-control range-btn" data-n="50">Last 50</button>
+                        <button class="btn-control range-btn active" data-n="100">Last 100</button>
+                        <button class="btn-control range-btn" data-n="250">Last 250</button>
+                        <button class="btn-control range-btn" data-n="500">Last 500</button>
+                    </div>
+                </div>
+
+                <div class="chart-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-bottom:1.2rem;">
+                    <div class="gauge-card" style="padding:1.1rem;">
+                        <div class="section-title" style="margin-bottom:0.4rem;">Winding & Bearing Temperature (°C)</div>
+                        <div id="chart-temp"></div>
+                    </div>
+                    <div class="gauge-card" style="padding:1.1rem;">
+                        <div class="section-title" style="margin-bottom:0.4rem;">Shaft Rotational Speed (RPM)</div>
+                        <div id="chart-rpm"></div>
+                    </div>
+                </div>
+
+                <div class="chart-grid-2" style="display:grid; grid-template-columns:1fr 1fr; gap:1.2rem; margin-bottom:1.2rem;">
+                    <div class="gauge-card" style="padding:1.1rem;">
+                        <div class="section-title" style="margin-bottom:0.4rem;">Tri-Axial Vibration (X / Y / Z in g)</div>
+                        <div id="chart-vib"></div>
+                    </div>
+                    <div class="gauge-card" style="padding:1.1rem;">
+                        <div class="section-title" style="margin-bottom:0.4rem;">Diagnostic Model Confidence (%)</div>
+                        <div id="chart-conf"></div>
+                    </div>
+                </div>
+
+                <div class="gauge-card" style="padding:1.1rem; margin-bottom:1.2rem;">
+                    <div class="section-title" style="margin-bottom:0.4rem;">Fault Class Frequency Distribution</div>
+                    <div id="chart-dist"></div>
+                </div>
+            </div>
+
+            <!-- ── PAGE 5: ALARM MANAGEMENT ── -->
+            <div class="page" id="page-alarms">
+                <div class="section-header">
+                    <div class="section-title">Industrial Alarm & Event Log</div>
+                </div>
+                <div class="metric-grid" id="alarm-summary-metrics"></div>
+                <div class="records-scroll" style="max-height:550px;" id="alarm-log-table"></div>
+            </div>
+
+            <!-- ── PAGE 6: MODEL GOVERNANCE ── -->
+            <div class="page" id="page-governance">
+                <div class="section-header">
+                    <div class="section-title">Model Lab · Governance, Retraining & Promotion</div>
+                </div>
+                <div class="gauge-card" style="padding:1rem;margin-bottom:1rem;">
+                    <div class="section-title">Authorized model operations</div>
+                    <div style="display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;margin-top:.7rem;">
+                        <input id="model-operator-token" class="mode-selector" style="width:220px;margin:0;" type="password" placeholder="Operator token">
+                        <button class="btn-control active" id="model-retrain-btn">Start candidate retraining</button>
+                        <select id="model-test-choice" class="mode-selector" style="width:150px;margin:0;">
+                            <option value="production">Test production</option>
+                            <option value="candidate">Test candidate</option>
+                        </select>
+                        <button class="btn-control" id="model-test-btn">Test latest telemetry</button>
+                        <input id="model-approval-notes" class="mode-selector" style="width:240px;margin:0;" placeholder="Approval / rollback notes">
+                        <button class="btn-control" id="model-promote-btn">Approve & promote</button>
+                        <select id="model-rollback-version" class="mode-selector" style="width:170px;margin:0;">
+                            <option value="">Rollback version</option>
+                        </select>
+                        <button class="btn-control" id="model-rollback-btn">Rollback</button>
+                    </div>
+                    <div id="model-lab-message" style="font-size:.75rem;color:var(--text-muted);margin-top:.6rem;"></div>
+                </div>
+                <div id="governance-content"></div>
+            </div>
+
+            <!-- ── PAGE 7: SYSTEM DATA HEALTH ── -->
+            <div class="page" id="page-health">
+                <div class="section-header">
+                    <div class="section-title">Sensor Ingestion & Data Quality Health</div>
+                </div>
+                <div class="metric-grid" id="health-metrics"></div>
+                <div id="health-checks" style="margin-bottom:1rem;"></div>
+                <div class="gauge-card" style="padding:1.3rem;">
+                    <div class="section-title" style="margin-bottom:0.5rem;">Overall Fault Classification Breakdown</div>
+                    <div id="chart-health-donut"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+</div>
+
+<!-- ══════ SHIFT REPORT MODAL ══════ -->
+<div class="modal-overlay" id="report-modal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <div>
+                <h2 style="font-size:1.18rem; font-weight:900; color:var(--text-heading);">DC MOTOR M-01 · SHIFT HANDOVER REPORT</h2>
+                <p style="font-size:0.74rem; color:var(--text-muted);" id="report-timestamp">Generated on: </p>
+            </div>
+            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+        </div>
+        <div id="report-modal-body"></div>
+        <div style="display:flex; justify-content:flex-end; gap:0.6rem; margin-top:1.4rem;">
+            <button class="btn-control" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            <button class="btn-control active" id="modal-done-btn">Close Report</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==============================================================
+//  INDUSTRIAL DIGITAL TWIN SCADA CENTER — ENGINE
+// ==============================================================
+
+const API_BASE = '';
+const REFRESH_MS = 2000;
+let currentPage = 'overview';
+let currentMode = 'simulation';
+let trendRange = 100;
+let refreshTimer = null;
+let audioEnabled = true;
+let previousFault = 0;
+let cachedLatestData = null;
+let selectedComponent = 'de_bearing';
+
+// ── Web Audio Synthesizer ─────────────────────────────────────
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+    }
+}
+
+function playAlarmTone(type) {
+    if (!audioEnabled) return;
+    try {
+        initAudio();
+        if (!audioCtx) return;
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'critical') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(880, now);
+            osc.frequency.exponentialRampToValueAtTime(440, now + 0.3);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            osc.start(now);
+            osc.stop(now + 0.4);
+        } else if (type === 'warning') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.exponentialRampToValueAtTime(659.25, now + 0.2);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        }
+    } catch (e) {
+        console.warn('Audio playback error:', e);
+    }
+}
+
+// ── Clean Light Theme Plotly Configuration ────────────────────
+const PLOTLY_LAYOUT = {
+    paper_bgcolor: 'rgba(0,0,0,0)',
+    plot_bgcolor: '#FFFFFF',
+    font: { family: 'Plus Jakarta Sans, sans-serif', color: '#475569', size: 11 },
+    margin: { l: 45, r: 15, t: 15, b: 35 },
+    xaxis: { gridcolor: '#F1F5F9', zerolinecolor: '#E2E8F0', tickfont: { color: '#64748B', size: 9.5 } },
+    yaxis: { gridcolor: '#F1F5F9', zerolinecolor: '#E2E8F0', tickfont: { color: '#64748B', size: 9.5 } },
+    legend: { bgcolor: 'rgba(255,255,255,0.8)', font: { size: 10, color: '#334155' }, orientation: 'h', y: 1.15 },
+};
+
+const PLOTLY_CONFIG = { displayModeBar: false, responsive: true };
+
+// ── Navigation ────────────────────────────────────────────────
+document.querySelectorAll('.sidebar-nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+        document.querySelectorAll('.sidebar-nav-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+        const page = item.dataset.page;
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        currentPage = page;
+        refreshAll();
+    });
+});
+
+document.getElementById('mode-selector').addEventListener('change', event => {
+    currentMode = event.target.value;
+    refreshAll();
+});
+
+async function requestSimulation(path, body) {
+    const response = await fetch(API_BASE + path, {
+        method: 'POST',
+        headers: body ? { 'Content-Type': 'application/json' } : undefined,
+        body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await response.json();
+    if (!response.ok || data.status !== 'ok') {
+        throw new Error(data.message || 'Simulation request failed');
+    }
+    renderSimulationStatus(data.simulation);
+    return data;
+}
+
+function renderSimulationStatus(simulation) {
+    if (!simulation) return;
+    const status = (simulation.status || 'stopped').toUpperCase();
+    const badge = document.getElementById('simulation-mode-badge');
+    const message = document.getElementById('simulation-control-message');
+    const logStatus = document.getElementById('simulation-log-status');
+    if (badge) badge.textContent = `SIMULATION MODE · ${status}`;
+    if (message) {
+        message.textContent = status === 'RUNNING'
+            ? `Streaming one source record every ${simulation.interval_seconds}s.`
+            : status === 'PAUSED'
+                ? 'Simulation paused. Resume continues the same dataset sequence.'
+                : status === 'STOPPED'
+                    ? 'Press Start to begin dataset-backed telemetry.'
+                    : 'Simulation status unavailable.';
+    }
+    if (logStatus) {
+        logStatus.textContent = `${simulation.record_count || 0} retained records (max ${simulation.record_limit || 250})`;
+    }
+    const selector = document.getElementById('simulation-fault-filter');
+    if (selector && selector.options.length <= 1) {
+        (simulation.available_faults || []).forEach(code => {
+            const option = document.createElement('option');
+            option.value = code;
+            option.textContent = `Code ${code} · ${faultLabels[code] || 'Fault ' + code}`;
+            selector.appendChild(option);
+        });
+    }
+}
+
+const faultLabels = { 0: 'Normal', 1: 'Bearing Fault', 2: 'Stator Fault', 3: 'Rotor Fault', 4: 'Overload', 5: 'Misalignment' };
+document.getElementById('simulation-start').addEventListener('click', async () => {
+    try {
+        await requestSimulation('/api/simulation/start', {
+            fault_status: document.getElementById('simulation-fault-filter').value,
+        });
+        await refreshAll();
+    } catch (error) {
+        document.getElementById('simulation-control-message').textContent = error.message;
+    }
+});
+['pause', 'resume', 'stop', 'clear'].forEach(action => {
+    const button = document.getElementById('simulation-' + (action === 'clear' ? 'clear-log' : action));
+    button.addEventListener('click', async () => {
+        try {
+            await requestSimulation('/api/simulation/' + action);
+            await refreshAll();
+        } catch (error) {
+            document.getElementById('simulation-control-message').textContent = error.message;
+        }
+    });
+});
+
+// Audio Toggle Button
+const audioBtn = document.getElementById('btn-audio-toggle');
+audioBtn.addEventListener('click', () => {
+    initAudio();
+    audioEnabled = !audioEnabled;
+    document.getElementById('audio-icon').textContent = audioEnabled ? '🔊' : '🔇';
+    document.getElementById('audio-text').textContent = audioEnabled ? 'Audio: Active' : 'Audio: Muted';
+    audioBtn.classList.toggle('active', audioEnabled);
+});
+
+// Shift Report Modal
+document.getElementById('btn-export-report').addEventListener('click', () => {
+    buildShiftReport();
+    document.getElementById('report-modal').classList.add('active');
+});
+
+document.getElementById('modal-close-btn').addEventListener('click', () => {
+    document.getElementById('report-modal').classList.remove('active');
+});
+
+document.getElementById('modal-done-btn').addEventListener('click', () => {
+    document.getElementById('report-modal').classList.remove('active');
+});
+
+// Clock
+function updateClock() {
+    const now = new Date();
+    document.getElementById('sidebar-clock').textContent = now.toLocaleTimeString('en-US', { hour12: false });
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Trend Range Buttons
+document.querySelectorAll('#trend-range-selector .range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#trend-range-selector .range-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        trendRange = parseInt(btn.dataset.n);
+        loadTrends();
+    });
+});
+
+// ── Fetch Helper ──────────────────────────────────────────────
+async function fetchJSON(url) {
+    try {
+        const separator = url.includes('?') ? '&' : '?';
+        const res = await fetch(API_BASE + url + separator + 'mode=' + encodeURIComponent(currentMode));
+        return await res.json();
+    } catch (e) {
+        console.error('Fetch error for ' + url + ':', e);
+        return null;
+    }
+}
+
+// ── 2D Motor Schematic Generator (Rich Industrial Vector Art) ──
+function build2DMotorSVG(sensors, fault, healthScore, thresholds = {}) {
+    const t1 = sensors.Temp1 ?? 35.0;
+    const t2 = sensors.Temp2 ?? 30.0;
+    const rpm = sensors.RPM ?? 0.0;
+    const current = sensors.Current ?? 0.0;
+    const x = sensors.X ?? 0.0, y = sensors.Y ?? 0.0, z = sensors.Z ?? 0.0;
+    const vibMag = Math.sqrt(x**2 + y**2 + z**2);
+
+    const temp1Limits = thresholds.Temp1 || { warning: 55, critical: 75 };
+    const temp2Limits = thresholds.Temp2 || { warning: 55, critical: 75 };
+    const vibrationLimits = thresholds.Vibration || { warning: 1.8, critical: 2.8 };
+    const spinDuration = rpm > 0 ? Math.max(0.18, (60 / rpm) * 1.5).toFixed(2) : 9999;
+    const isStopped = rpm === 0;
+    const isVibrating = !isStopped && (vibMag >= vibrationLimits.warning || fault === 1 || fault === 5);
+
+    // Component status colors
+    const statorCol = (fault === 2 || t1 >= temp1Limits.critical) ? '#EF4444' : (fault === 4 || t1 >= temp1Limits.warning) ? '#F59E0B' : '#10B981';
+    const bearingCol = (fault === 1 || vibMag >= vibrationLimits.critical) ? '#EF4444' : (t2 >= temp2Limits.warning || vibMag >= vibrationLimits.warning) ? '#F59E0B' : '#10B981';
+    const rotorCol = (fault === 3) ? '#EF4444' : (fault === 4) ? '#F59E0B' : '#2563EB';
+    const couplingCol = (fault === 5) ? '#EF4444' : '#10B981';
+
+    return `
+    <svg viewBox="0 0 560 250" xmlns="http://www.w3.org/2000/svg" style="max-width:540px;width:100%;height:auto;margin:auto;" class="${isVibrating ? 'motor-vibrating-2d' : ''}">
+      <defs>
+        <!-- Metallic Gradient Shading -->
+        <linearGradient id="metalShaft" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#94A3B8" />
+          <stop offset="50%" stop-color="#F1F5F9" />
+          <stop offset="100%" stop-color="#64748B" />
+        </linearGradient>
+        <linearGradient id="casingGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#FFFFFF" />
+          <stop offset="70%" stop-color="#F1F5F9" />
+          <stop offset="100%" stop-color="#E2E8F0" />
+        </linearGradient>
+        <linearGradient id="copperCoil" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#EA580C" />
+          <stop offset="50%" stop-color="#FBBF24" />
+          <stop offset="100%" stop-color="#EA580C" />
+        </linearGradient>
+        <filter id="shadowFilter" x="-10%" y="-10%" width="120%" height="120%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#0F172A" flood-opacity="0.08"/>
+        </filter>
+      </defs>
+
+      <!-- Mounting Base & Foundation -->
+      <rect x="70" y="194" width="300" height="20" rx="4" fill="#CBD5E1" stroke="#94A3B8" stroke-width="1.5" filter="url(#shadowFilter)"/>
+      <rect x="90" y="204" width="28" height="10" rx="2" fill="#64748B"/>
+      <rect x="322" y="204" width="28" height="10" rx="2" fill="#64748B"/>
+
+      <!-- Misalignment Shear Alert on Foundation Bolts -->
+      ${fault === 5 ? `
+        <polygon points="104,194 109,182 99,182" fill="#EF4444"/>
+        <polygon points="336,194 341,182 331,182" fill="#EF4444"/>
+      ` : ''}
+
+      <!-- Main Stator Casing Frame (Detailed Cast Iron Housing) -->
+      <rect x="75" y="42" width="290" height="152" rx="22" fill="url(#casingGrad)" stroke="#64748B" stroke-width="2.5" filter="url(#shadowFilter)"/>
+
+      <!-- Stator Heat Radiating Fins -->
+      <g stroke="#94A3B8" stroke-width="3" stroke-linecap="round">
+        <line x1="110" y1="42" x2="110" y2="28"/>
+        <line x1="135" y1="42" x2="135" y2="28"/>
+        <line x1="160" y1="42" x2="160" y2="28"/>
+        <line x1="185" y1="42" x2="185" y2="28"/>
+        <line x1="210" y1="42" x2="210" y2="28"/>
+        <line x1="235" y1="42" x2="235" y2="28"/>
+        <line x1="260" y1="42" x2="260" y2="28"/>
+        <line x1="285" y1="42" x2="285" y2="28"/>
+        <line x1="310" y1="42" x2="310" y2="28"/>
+      </g>
+
+      <!-- Stator Series Field Coils (Top & Bottom) -->
+      <g onclick="selectComponent('stator')" style="cursor:pointer;">
+        <!-- Top Field Coil -->
+        <rect x="135" y="56" width="170" height="26" rx="6" fill="#FEF3C7" stroke="${statorCol}" stroke-width="2.5"/>
+        <path d="M 140 69 L 300 69" stroke="${statorCol}" stroke-width="2.5" class="flux-flowing-2d"/>
+        <!-- Bottom Field Coil -->
+        <rect x="135" y="154" width="170" height="26" rx="6" fill="#FEF3C7" stroke="${statorCol}" stroke-width="2.5"/>
+        <path d="M 140 167 L 300 167" stroke="${statorCol}" stroke-width="2.5" class="flux-flowing-2d"/>
+        <rect x="175" y="46" width="90" height="16" rx="4" fill="#FFFFFF" stroke="${statorCol}" stroke-width="1.5"/>
+        <text x="220" y="58" fill="${statorCol}" font-size="8.5" font-weight="900" text-anchor="middle">STATOR COIL (${t1.toFixed(1)}°C)</text>
+      </g>
+
+      <!-- Center Metallic Drive Shaft -->
+      <rect x="25" y="110" width="480" height="16" rx="3" fill="url(#metalShaft)" stroke="#475569" stroke-width="1.5"/>
+
+      <!-- Non-Drive End Cooling Fan -->
+      <g onclick="selectComponent('nde_bearing')" style="cursor:pointer;">
+        <rect x="80" y="62" width="24" height="112" rx="4" fill="#E2E8F0" stroke="#64748B" stroke-width="1.5"/>
+        <g style="transform-origin: 92px 118px; animation: motorSpinAnimation2D ${spinDuration}s infinite linear;">
+          <line x1="92" y1="72" x2="92" y2="164" stroke="#0284C7" stroke-width="3.5" stroke-linecap="round"/>
+          <line x1="84" y1="88" x2="100" y2="148" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="100" y1="88" x2="84" y2="148" stroke="#0284C7" stroke-width="2.5" stroke-linecap="round"/>
+        </g>
+      </g>
+
+      <!-- Non-Drive End (NDE) Bearing Housing -->
+      <g onclick="selectComponent('nde_bearing')" style="cursor:pointer;">
+        <circle cx="118" cy="118" r="17" fill="#FFFFFF" stroke="${bearingCol}" stroke-width="3"/>
+        <circle cx="118" cy="118" r="6" fill="${bearingCol}"/>
+        ${fault === 1 ? `
+          <circle cx="118" cy="118" r="28" fill="none" stroke="${bearingCol}" stroke-width="2.5">
+            <animate attributeName="r" values="17;32" dur="0.9s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0" dur="0.9s" repeatCount="indefinite"/>
+          </circle>
+        ` : ''}
+        <rect x="96" y="142" width="44" height="14" rx="3" fill="#FFFFFF" stroke="${bearingCol}" stroke-width="1"/>
+        <text x="118" y="152" fill="${bearingCol}" font-size="7.5" font-weight="900" text-anchor="middle">NDE BRG</text>
+      </g>
+
+      <!-- 2D Rotating Armature & Commutator Core -->
+      <g onclick="selectComponent('rotor')" style="cursor:pointer;">
+        <!-- Armature Core Cylinder -->
+        <rect x="145" y="85" width="145" height="66" rx="8" fill="#F8FAFC" stroke="${rotorCol}" stroke-width="2.5"/>
+        
+        <!-- Rotating Armature Conductors -->
+        <g style="transform-origin: 217px 118px; animation: motorSpinAnimation2D ${spinDuration}s infinite linear;">
+          <line x1="217" y1="87" x2="217" y2="149" stroke="${rotorCol}" stroke-width="3"/>
+          <line x1="175" y1="97" x2="259" y2="139" stroke="${rotorCol}" stroke-width="3"/>
+          <line x1="175" y1="139" x2="259" y2="97" stroke="${rotorCol}" stroke-width="3"/>
+          <circle cx="217" cy="118" r="20" fill="none" stroke="${rotorCol}" stroke-width="2"/>
+        </g>
+
+        <!-- Copper Commutator Segment Bars -->
+        <rect x="295" y="96" width="34" height="44" rx="4" fill="url(#copperCoil)" stroke="#B45309" stroke-width="1.5"/>
+        <!-- Carbon Brush Blocks -->
+        <rect x="304" y="84" width="16" height="12" rx="2" fill="#334155" stroke="#0F172A" stroke-width="1"/>
+        <rect x="304" y="140" width="16" height="12" rx="2" fill="#334155" stroke="#0F172A" stroke-width="1"/>
+
+        <!-- Spark Burst on Rotor/Commutator Defect -->
+        ${fault === 3 ? `
+          <polygon points="312,96 316,88 308,92" fill="#EF4444"><animate attributeName="opacity" values="0;1;0" dur="0.2s" repeatCount="indefinite"/></polygon>
+          <polygon points="312,140 316,148 308,144" fill="#EF4444"><animate attributeName="opacity" values="0;1;0" dur="0.2s" repeatCount="indefinite"/></polygon>
+        ` : ''}
+        
+        <rect x="165" y="167" width="105" height="15" rx="3" fill="#FFFFFF" stroke="${rotorCol}" stroke-width="1"/>
+        <text x="217" y="178" fill="${rotorCol}" font-size="8" font-weight="900" text-anchor="middle">ROTOR (${rpm.toFixed(0)} RPM)</text>
+      </g>
+
+      <!-- Drive-End (DE) Front Bearing Housing -->
+      <g onclick="selectComponent('de_bearing')" style="cursor:pointer;">
+        <circle cx="345" cy="118" r="17" fill="#FFFFFF" stroke="${bearingCol}" stroke-width="3"/>
+        <circle cx="345" cy="118" r="6" fill="${bearingCol}"/>
+        ${fault === 1 ? `
+          <circle cx="345" cy="118" r="28" fill="none" stroke="${bearingCol}" stroke-width="2.5">
+            <animate attributeName="r" values="17;32" dur="0.9s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="1;0" dur="0.9s" repeatCount="indefinite"/>
+          </circle>
+        ` : ''}
+        <rect x="325" y="142" width="40" height="14" rx="3" fill="#FFFFFF" stroke="${bearingCol}" stroke-width="1"/>
+        <text x="345" y="152" fill="${bearingCol}" font-size="7.5" font-weight="900" text-anchor="middle">DE BRG</text>
+      </g>
+
+      <!-- Drive Output Coupling -->
+      <g onclick="selectComponent('coupling')" style="cursor:pointer;">
+        <rect x="440" y="102" width="38" height="32" rx="4" fill="#E2E8F0" stroke="${couplingCol}" stroke-width="2.5" filter="url(#shadowFilter)"/>
+        <line x1="459" y1="102" x2="459" y2="134" stroke="${couplingCol}" stroke-width="2" stroke-dasharray="3 3"/>
+        ${fault === 5 ? `
+          <path d="M 435 94 L 455 94 L 450 88" stroke="#EF4444" stroke-width="2.5" fill="none"/>
+          <text x="459" y="86" fill="#EF4444" font-size="8" font-weight="900" text-anchor="middle">MISALIGNED</text>
+        ` : `
+          <text x="459" y="92" fill="#64748B" font-size="8" font-weight="800" text-anchor="middle">COUPLING</text>
+        `}
+      </g>
+
+      <!-- Live Vector Sensor Pins -->
+      <circle cx="118" cy="118" r="4.5" fill="${bearingCol}"/>
+      <circle cx="220" cy="69" r="4.5" fill="${statorCol}"/>
+      <circle cx="345" cy="118" r="4.5" fill="${bearingCol}"/>
+      <circle cx="459" cy="118" r="4.5" fill="${couplingCol}"/>
+
+      <!-- Subtitle -->
+      <text x="280" y="236" fill="#64748B" font-size="9" font-family="'JetBrains Mono', monospace" font-weight="800" text-anchor="middle" letter-spacing="0.08em">
+        DC SERIES MOTOR M-01 · 2D DIGITAL TWIN TELEMETRY ACTIVE
+      </text>
+    </svg>`;
+}
+
+// ── Gauge Renderer ────────────────────────────────────────────
+function buildGauge(containerId, title, value, min, max, unit, greenMax, yellowMax) {
+    const barColor = value <= greenMax ? '#10B981' : value <= yellowMax ? '#F59E0B' : '#EF4444';
+
+    const data = [{
+        type: 'indicator',
+        mode: 'gauge+number',
+        value: value,
+        number: { suffix: ' ' + unit, font: { size: 19, color: '#0B132B', family: 'JetBrains Mono' } },
+        title: { text: title, font: { size: 10.5, color: '#475569', family: 'Plus Jakarta Sans', weight: 800 } },
+        gauge: {
+            axis: { range: [min, max], tickcolor: '#CBD5E1', dtick: (max - min) / 4, tickfont: { size: 8.5, color: '#94A3B8' } },
+            bar: { color: barColor, thickness: 0.3 },
+            bgcolor: '#F8FAFC',
+            bordercolor: '#E2E8F0',
+            borderwidth: 1,
+            steps: [
+                { range: [min, greenMax], color: 'rgba(16, 185, 129, 0.15)' },
+                { range: [greenMax, yellowMax], color: 'rgba(245, 158, 11, 0.15)' },
+                { range: [yellowMax, max], color: 'rgba(239, 68, 68, 0.15)' },
+            ],
+            threshold: { line: { color: '#EF4444', width: 2.5 }, thickness: 0.75, value: yellowMax },
+        },
+    }];
+
+    const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { family: 'Plus Jakarta Sans' },
+        margin: { l: 18, r: 18, t: 36, b: 10 },
+        height: 155,
+    };
+
+    Plotly.react(containerId, data, layout, PLOTLY_CONFIG);
+}
+
+function renderGauges(containerId, sensors, healthScore) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    const gaugeDefs = [
+        { id: 'health', title: 'HEALTH INDEX', icon: '🛡️', val: healthScore, min: 0, max: 100, unit: '%', green: 80, yellow: 60, sub: 'Overall Machine Condition' },
+        { id: 'rpm', title: 'SHAFT SPEED', icon: '🌀', val: sensors.RPM || 0, min: 0, max: 2000, unit: 'rpm', green: 1600, yellow: 1800, sub: 'Nominal: 1400 - 1600' },
+        { id: 'temp1', title: 'STATOR TEMP', icon: '🌡️', val: sensors.Temp1 || 0, min: 0, max: 120, unit: '°C', green: 55, yellow: 75, sub: 'Safe Limit: < 60°C' },
+        { id: 'temp2', title: 'BEARING TEMP', icon: '⚙️', val: sensors.Temp2 || 0, min: 0, max: 120, unit: '°C', green: 50, yellow: 70, sub: 'Safe Limit: < 55°C' },
+        { id: 'current', title: 'LOAD CURRENT', icon: '⚡', val: sensors.Current || 0, min: 0, max: 30, unit: 'A', green: 16, yellow: 22, sub: 'Rated: 12 - 16 A' },
+    ];
+
+    if (!container.querySelector('.gauge-card')) {
+        container.innerHTML = gaugeDefs.map(g => `
+            <div class="gauge-card">
+                <div class="gauge-card-header">
+                    <span>${g.icon}</span>
+                    <span>${g.title}</span>
+                </div>
+                <div id="${containerId}-${g.id}"></div>
+                <div class="gauge-sub-info">${g.sub}</div>
+            </div>
+        `).join('');
+    }
+
+    gaugeDefs.forEach(g => {
+        buildGauge(containerId + '-' + g.id, g.title, g.val, g.min, g.max, g.unit, g.green, g.yellow);
+    });
+}
+
+// ── Sensor Instrumentation Table ─────────────────────────────
+function buildSensorTable(sensors) {
+    const units = { Voltage: 'V', Current: 'A', RPM: 'rpm', Temp1: '°C', Temp2: '°C', X: 'g', Y: 'g', Z: 'g' };
+    const limits = {
+        Voltage: '210 - 240 V (Normal Line)',
+        Current: '12 - 16 A (Nominal)',
+        RPM: '1400 - 1600 rpm (Rated)',
+        Temp1: '< 60°C (Class F Safe)',
+        Temp2: '< 55°C (Grease Film Safe)',
+        X: '< 1.8g (ISO Zone A)',
+        Y: '< 1.8g (ISO Zone A)',
+        Z: '< 1.8g (ISO Zone A)',
+    };
+
+    let html = `
+    <table class="records-table">
+        <thead>
+            <tr>
+                <th>Status</th>
+                <th>Sensor Channel</th>
+                <th>Current Value</th>
+                <th>Threshold</th>
+            </tr>
+        </thead>
+        <tbody>`;
+
+    for (const [key, val] of Object.entries(sensors)) {
+        let isDanger = false;
+        if (key === 'Temp1' && val > 70) isDanger = true;
+        if (key === 'Temp2' && val > 65) isDanger = true;
+        if (key === 'Current' && val > 20) isDanger = true;
+        if ((key === 'X' || key === 'Y' || key === 'Z') && Math.abs(val) > 2.8) isDanger = true;
+
+        const dotColor = isDanger ? 'var(--accent-red)' : 'var(--accent-green)';
+
+        html += `
+        <tr>
+            <td><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${dotColor};box-shadow:0 0 0 2px rgba(0,0,0,0.05);"></span></td>
+            <td style="color:var(--text-heading);font-weight:800;">${key}</td>
+            <td class="mono" style="color:${isDanger ? 'var(--accent-red)' : 'var(--brand-primary)'};font-weight:800;">${val.toFixed(3)} ${units[key] || ''}</td>
+            <td style="color:var(--text-muted);font-size:0.72rem;">${limits[key] || 'Nominal range'}</td>
+        </tr>`;
+    }
+    html += `</tbody></table>`;
+    return html;
+}
+
+// ── Component Inspector Click Handler ────────────────────────
+function selectComponent(key) {
+    selectedComponent = key;
+    if (!cachedLatestData || !cachedLatestData.components) return;
+    const comp = cachedLatestData.components[key];
+    if (!comp) return;
+
+    document.querySelectorAll('.comp-item').forEach(el => el.classList.remove('selected'));
+    const targetEl = document.getElementById('comp-item-' + key);
+    if (targetEl) targetEl.classList.add('selected');
+
+    document.getElementById('detail-comp-title').textContent = comp.name + ' · [' + comp.status + ']';
+    document.getElementById('detail-comp-desc').textContent = comp.desc + ' — Real-Time Telemetry: ' + comp.metric;
+}
+
+function renderComponentInspector(components) {
+    const container = document.getElementById('component-inspector-grid');
+    if (!container || !components) return;
+
+    let html = '';
+    for (const [key, c] of Object.entries(components)) {
+        const dotClass = c.status === 'HEALTHY' ? 'healthy' : c.status === 'WARNING' ? 'warning' : 'critical';
+        const isSelected = key === selectedComponent ? 'selected' : '';
+
+        html += `
+        <div class="comp-item ${isSelected}" id="comp-item-${key}" onclick="selectComponent('${key}')">
+            <div class="comp-left">
+                <span class="comp-status-dot ${dotClass}"></span>
+                <div>
+                    <div class="comp-name">${c.name}</div>
+                    <div class="comp-desc">${c.desc}</div>
+                </div>
+            </div>
+            <div class="comp-metric">${c.metric}</div>
+        </div>`;
+    }
+    container.innerHTML = html;
+}
+
+// ── Dynamic Alarm Banner ──────────────────────────────────────
+function buildAlarmBanner(warningStatus, faultLabel, confidence, plainSummary) {
+    const confidenceText = confidence == null ? 'n/a' : (confidence * 100).toFixed(1) + '%';
+    if (warningStatus === 'EARLY WARNING') {
+        return `
+        <div class="alarm-banner critical">
+            <span class="alarm-banner-icon">⛔</span>
+            <div class="alarm-banner-content">
+                <h4>EARLY WARNING ACTIVE · ${faultLabel} DETECTED</h4>
+                <p>${plainSummary} · Diagnostic Confidence: ${confidenceText}</p>
+            </div>
+        </div>`;
+    } else if (warningStatus === 'POSSIBLE ABNORMALITY') {
+        return `
+        <div class="alarm-banner warning">
+            <span class="alarm-banner-icon">⚠️</span>
+            <div class="alarm-banner-content">
+                <h4>POSSIBLE ABNORMALITY · ${faultLabel} PREDICTED</h4>
+                <p>${plainSummary} · Confidence: ${confidenceText}</p>
+            </div>
+        </div>`;
+    }
+    return `
+    <div class="alarm-banner normal">
+        <span class="alarm-banner-icon">✅</span>
+        <div class="alarm-banner-content">
+            <h4>SYSTEM NORMAL · MOTOR OPERATING AT NOMINAL CAPACITY</h4>
+            <p>${plainSummary}</p>
+        </div>
+    </div>`;
+}
+
+// ── Records Table ─────────────────────────────────────────────
+function buildRecordsTable(records) {
+    if (!records || records.length === 0) return '<p style="padding:1rem;color:var(--text-muted);font-size:0.75rem;">No records available.</p>';
+    let html = '<table class="records-table"><thead><tr>';
+    html += '<th>Timestamp</th><th>Diagnostic Status</th><th>Confidence</th>';
+    if (records[0].Phase !== undefined) html += '<th>Simulation Phase</th><th>Simulated Target</th><th>Match</th>';
+    html += '</tr></thead><tbody>';
+
+    for (const r of records) {
+        const confPct = (r.Confidence * 100).toFixed(1);
+        const confColor = r.Confidence > 0.85 ? '#10B981' : r.Confidence > 0.6 ? '#F59E0B' : '#EF4444';
+        const faultColor = r.Predicted_Fault === 0 ? '#10B981' : '#EF4444';
+        html += `<tr>
+            <td class="mono">${r.timestamp}</td>
+            <td><span style="color:${faultColor};font-weight:800;">${r.fault_label}</span></td>
+            <td class="mono" style="color:${confColor};font-weight:800;">${confPct}%</td>`;
+        if (r.Phase !== undefined) {
+            const correctIcon = r.Is_Correct === 1 ? '✅ Match' : '❌ Mismatch';
+            html += `<td>${r.Phase}</td><td>Fault ${r.Target_Fault}</td><td style="font-weight:800;">${correctIcon}</td>`;
+        }
+        html += '</tr>';
+    }
+    html += '</tbody></table>';
+    return html;
+}
+
+function buildSimulationTelemetryTable(records) {
+    if (!records || records.length === 0) {
+        return '<p style="padding:1rem;color:var(--text-muted);font-size:0.75rem;">No simulation records yet. Press Start.</p>';
+    }
+    const fields = [
+        ['Voltage', 'V'], ['Current', 'A'], ['RPM', 'rpm'],
+        ['Temp1', '°C'], ['Temp2', '°C'], ['X', 'g'], ['Y', 'g'], ['Z', 'g'],
+    ];
+    let html = '<table class="records-table"><thead><tr><th>Timestamp</th>';
+    fields.forEach(([field]) => { html += `<th>${field}</th>`; });
+    html += '<th>Fault Status</th><th>ML Prediction</th><th>Alert Severity</th></tr></thead><tbody>';
+    records.forEach(record => {
+        html += `<tr><td class="mono">${record.timestamp}</td>`;
+        fields.forEach(([field, unit]) => {
+            const value = record[field];
+            html += `<td class="mono">${value == null || Number.isNaN(Number(value)) ? 'Unavailable' : `${Number(value).toFixed(2)} ${unit}`}</td>`;
+        });
+        const faultColor = Number(record.fault_status) === 0 ? '#10B981' : '#EF4444';
+        html += `<td style="color:${faultColor};font-weight:800;">${record.fault_label || 'Unavailable'}</td>`;
+        html += `<td>${record.ml_prediction == null ? 'Unavailable' : record.ml_prediction}</td>`;
+        html += `<td><span class="severity-badge ${(record.alert_severity || 'normal').toLowerCase()}">${record.alert_severity || 'Unavailable'}</span></td></tr>`;
+    });
+    return html + '</tbody></table>';
+}
+
+// ── Student Hub: Load Fault Encyclopedia ──────────────────────
+async function loadFaultEncyclopedia() {
+    const container = document.getElementById('fault-encyclopedia-cards');
+    if (!container) return;
+
+    const res = await fetchJSON('/api/fault_guide');
+    if (!res || res.status !== 'ok' || !res.classes) return;
+
+    let html = '';
+    for (const [code, info] of Object.entries(res.classes)) {
+        html += `
+        <div class="fault-encyclopedia-card">
+            <div class="fault-enc-header">
+                <div class="fault-enc-title">
+                    <span>${info.icon}</span>
+                    <span>${info.title}</span>
+                </div>
+                <span class="fault-enc-badge" style="background:#EFF6FF; color:#2563EB; border:1px solid #BFDBFE;">
+                    CLASS ${code}
+                </span>
+            </div>
+            <div class="fault-enc-field">
+                <strong>Component Affected:</strong>
+                ${info.component}
+            </div>
+            <div class="fault-enc-field">
+                <strong>What Happens Physically? (Mechanical / Electrical)</strong>
+                ${info.physical_mechanism}
+            </div>
+            <div class="analogy-box">
+                <strong>Real-World Everyday Analogy:</strong>
+                ${info.simple_analogy}
+            </div>
+            <div class="fault-enc-field">
+                <strong>Key Sensor Symptoms:</strong>
+                ${info.key_symptoms}
+            </div>
+            <div class="fault-enc-field">
+                <strong>Engineering Standard & Tolerance:</strong>
+                <span style="color:var(--text-heading); font-weight:800;">${info.engineering_standard}</span>
+            </div>
+            <div class="fault-enc-field">
+                <strong>Maintenance & Remediation Protocol:</strong>
+                ${info.action_required}
+            </div>
+        </div>`;
+    }
+    container.innerHTML = html;
+}
+
+// ── Master Latest Telemetry Loader ────────────────────────────
+async function loadLatest() {
+    const d = await fetchJSON('/api/latest');
+    if (d && d.status === 'simulation_stopped') {
+        renderSimulationStatus(d.simulation);
+        document.getElementById('sidebar-telemetry-badge').textContent = 'SIMULATION MODE · STOPPED';
+        document.getElementById('kpi-strip').innerHTML = '<span class="kpi-chip" style="color:var(--accent-amber);">SIMULATION MODE · PRESS START</span>';
+        return;
+    }
+    if (!d || d.status !== 'ok') {
+        if (d && d.status === 'firebase_unauthorized') {
+            document.getElementById('sidebar-telemetry-badge').textContent = 'FIREBASE 401 LOCKED';
+            document.getElementById('kpi-strip').innerHTML = '<span class="kpi-chip" style="color:var(--accent-red);border-color:#FECACA;">FIREBASE RULES LOCKED (401)</span>';
+            const banner = document.getElementById('alarm-banner-overview');
+            if (banner) {
+                banner.innerHTML = `
+                <div class="alarm-banner critical">
+                    <span class="alarm-banner-icon">🔒</span>
+                    <div class="alarm-banner-content">
+                        <h4>FIREBASE REALTIME DATABASE RULES LOCKED (401 UNAUTHORIZED)</h4>
+                        <p>To enable real-time cloud data ingestion: In Firebase Console -> Realtime Database -> <strong>Rules</strong> tab, set <code>".read": true</code> and <code>".write": true</code>, then click <strong>Publish</strong>.</p>
+                    </div>
+                </div>`;
+            }
+            return;
+        } else if (d && d.status === 'firebase_waiting') {
+            document.getElementById('sidebar-telemetry-badge').textContent = 'AWAITING CLOUD DATA';
+            document.getElementById('kpi-strip').innerHTML = '<span class="kpi-chip" style="color:var(--accent-amber);">FIREBASE CONNECTED · AWAITING DATA</span>';
+            const banner = document.getElementById('alarm-banner-overview');
+            if (banner) {
+                banner.innerHTML = `
+                <div class="alarm-banner warning">
+                    <span class="alarm-banner-icon">📡</span>
+                    <div class="alarm-banner-content">
+                        <h4>CONNECTED TO FIREBASE CLOUD · WAITING FOR SENSOR PACKETS</h4>
+                        <p>Connected to <code>${d.database_url}</code>. Awaiting telemetry at <code>/motor_telemetry/latest</code> (from IoT ESP32 or <code>15_firebase_sensor_sender.py</code>).</p>
+                    </div>
+                </div>`;
+            }
+            return;
+        }
+
+        document.getElementById('kpi-strip').innerHTML = '<span class="kpi-chip">AWAITING SENSOR TELEMETRY</span>';
+        return;
+    }
+
+    cachedLatestData = d;
+    renderSimulationStatus(d.simulation);
+    const displayFault = d.fault_status ?? d.predicted_fault ?? 0;
+
+    // Check Audio Alarm Trigger
+    if (displayFault !== 0 && displayFault !== previousFault) {
+        if (d.warning_status === 'EARLY WARNING') {
+            playAlarmTone('critical');
+        } else {
+            playAlarmTone('warning');
+        }
+    }
+    previousFault = displayFault;
+
+    // KPI Strip
+    const statusColor = d.alert_severity === 'Critical' || d.warning_status === 'EARLY WARNING'
+        ? '#EF4444'
+        : displayFault === 0 ? '#10B981' : '#F59E0B';
+    const statusText = d.condition_label || 'OPTIMAL';
+    const alarmsColor = d.active_alarms > 3 ? '#EF4444' : d.active_alarms > 0 ? '#F59E0B' : '#10B981';
+
+    document.getElementById('kpi-strip').innerHTML = `
+        <div class="kpi-chip">
+            <span class="kpi-chip-dot" style="background:${statusColor};"></span>
+            <span class="kpi-chip-val" style="color:${statusColor};">${statusText}</span>
+        </div>
+        <div class="kpi-chip">HEALTH <span class="kpi-chip-val" style="color:${statusColor};">${d.health_score || 98}%</span></div>
+        <div class="kpi-chip">SPEED <span class="kpi-chip-val">${(d.sensors.RPM || 0).toFixed(0)} rpm</span></div>
+        <div class="kpi-chip">VIB <span class="kpi-chip-val">${(d.vib_magnitude || 0.8).toFixed(2)} g</span></div>
+        <div class="kpi-chip">TEMP <span class="kpi-chip-val">${(d.sensors.Temp1 || 35).toFixed(1)} °C</span></div>
+        <div class="kpi-chip">UPTIME <span class="kpi-chip-val">${d.uptime_pct}%</span></div>
+        <div class="kpi-chip">ALARMS <span class="kpi-chip-val" style="color:${alarmsColor};">${d.active_alarms}</span></div>
+    `;
+
+    document.getElementById('sidebar-telemetry-badge').textContent =
+        currentMode === 'firebase' ? 'FIREBASE CLOUD STREAM' :
+        currentMode === 'simulation' ? 'SIMULATION STREAM' : 'HARDWARE STREAM';
+
+    // ── Overview Page Updates ──
+    if (currentPage === 'overview') {
+        document.getElementById('alarm-banner-overview').innerHTML =
+            buildAlarmBanner(d.warning_status, d.fault_label, d.confidence, d.plain_english_summary);
+
+        document.getElementById('pe-summary-text').textContent = d.plain_english_summary;
+
+        if (d.maintenance_actions && d.maintenance_actions.length > 0) {
+            document.getElementById('pe-actions-list').innerHTML = d.maintenance_actions
+                .map(a => `<li>${a}</li>`).join('');
+        }
+
+        // ISO 10816 Vibration Severity Meter
+        const vib = d.vib_magnitude || 0.8;
+        const isoPct = Math.min(95, Math.max(5, (vib / 5.0) * 100));
+        document.getElementById('iso-pointer').style.left = isoPct + '%';
+        const isoLabel = document.getElementById('iso-zone-label');
+        if (vib < 1.8) {
+            isoLabel.textContent = 'ZONE A (GOOD)';
+            isoLabel.style.color = '#10B981';
+        } else if (vib < 2.8) {
+            isoLabel.textContent = 'ZONE B (ACCEPTABLE)';
+            isoLabel.style.color = '#0284C7';
+        } else if (vib < 4.5) {
+            isoLabel.textContent = 'ZONE C (ALERT)';
+            isoLabel.style.color = '#F59E0B';
+        } else {
+            isoLabel.textContent = 'ZONE D (HAZARD)';
+            isoLabel.style.color = '#EF4444';
+        }
+
+        renderGauges('gauge-grid', d.sensors, d.health_score);
+        document.getElementById('motor-svg-overview').innerHTML =
+            build2DMotorSVG(d.sensors, displayFault, d.health_score, d.thresholds);
+
+        document.getElementById('schematic-speed-badge').textContent =
+            `${(d.sensors.RPM || 0) === 0 ? 'STOPPED' : 'SPIN'}: ${(d.sensors.RPM || 0).toFixed(0)} RPM · ${d.fault_label.toUpperCase()}`;
+
+        renderComponentInspector(d.components);
+
+        // Status Metrics Cards
+        document.getElementById('status-metrics').innerHTML = `
+            <div class="metric-card"><div class="metric-label">Motor State</div><div class="metric-value" style="color:${(d.sensors.RPM || 0) === 0 ? '#64748B' : '#10B981'};">${(d.sensors.RPM || 0) === 0 ? 'STOPPED' : 'OPERATING'}</div></div>
+            <div class="metric-card"><div class="metric-label">Dataset Fault Status</div><div class="metric-value" style="color:${displayFault === 0 ? '#10B981' : '#EF4444'}; font-size:1.15rem;">${d.fault_label}</div></div>
+            <div class="metric-card"><div class="metric-label">Sensor Thresholds</div><div class="metric-value" style="font-size:1.05rem; color:${statusColor};">${d.alert_severity || d.warning_status}</div></div>
+            <div class="metric-card"><div class="metric-label">ML Prediction</div><div class="metric-value" style="font-size:1.05rem;">${d.ml_prediction == null ? 'Unavailable' : d.ml_prediction}</div></div>
+        `;
+
+        // Simulation Verification
+        if (d.phase !== undefined && !d.simulation_mode) {
+            const faultLabels = { 0: 'Normal', 1: 'Bearing Fault', 2: 'Stator Fault', 3: 'Rotor Fault', 4: 'Overload', 5: 'Misalignment' };
+            const correct = d.is_correct === 1;
+            document.getElementById('simulation-verification').innerHTML = `
+                <div class="section-header"><div class="section-title">Simulation Verification Benchmark</div></div>
+                <div class="metric-grid">
+                    <div class="metric-card"><div class="metric-label">Simulation Phase</div><div class="metric-value" style="font-size:1.1rem;">${d.phase}</div></div>
+                    <div class="metric-card"><div class="metric-label">Simulated Target Class</div><div class="metric-value" style="font-size:1.1rem;">${faultLabels[d.target_fault] || 'Fault ' + d.target_fault}</div></div>
+                    <div class="metric-card"><div class="metric-label">Model Predicted Class</div><div class="metric-value" style="font-size:1.1rem; color:${correct ? '#10B981' : '#EF4444'};">${d.fault_label}</div></div>
+                    <div class="metric-card"><div class="metric-label">Prediction Accuracy</div><div class="metric-value" style="font-size:1.1rem; color:${correct ? '#10B981' : '#EF4444'};">${correct ? '✓ MATCH' : '✗ MISMATCH'}</div></div>
+                </div>
+            `;
+        }
+    }
+
+    // ── Live Page Updates ──
+    if (currentPage === 'live') {
+        document.getElementById('live-refresh-time').textContent = 'Last Telemetry Ping: ' + new Date().toLocaleTimeString();
+        document.getElementById('alarm-banner-live').innerHTML =
+            buildAlarmBanner(d.warning_status, d.fault_label, d.confidence, d.plain_english_summary);
+
+        renderGauges('gauge-grid-live', d.sensors, d.health_score);
+        document.getElementById('motor-svg-live').innerHTML =
+            build2DMotorSVG(d.sensors, displayFault, d.health_score, d.thresholds);
+
+        document.getElementById('sensor-table-live').innerHTML = buildSensorTable(d.sensors);
+
+        document.getElementById('live-schematic-status').textContent =
+            `LIVE: ${(d.sensors.RPM || 0).toFixed(0)} RPM · ${(d.vib_magnitude || 0.8).toFixed(2)}g`;
+
+        if (d.phase !== undefined) {
+            const faultLabels = { 0: 'Normal', 1: 'Bearing Fault', 2: 'Stator Fault', 3: 'Rotor Fault', 4: 'Overload', 5: 'Misalignment' };
+            const correct = d.is_correct === 1;
+            document.getElementById('simulation-verification-live').innerHTML = `
+                <div class="section-header"><div class="section-title">Simulation Phase Verification</div></div>
+                <div class="metric-grid">
+                    <div class="metric-card"><div class="metric-label">Phase</div><div class="metric-value" style="font-size:1.1rem;">${d.phase}</div></div>
+                    <div class="metric-card"><div class="metric-label">Target Class</div><div class="metric-value" style="font-size:1.1rem;">${faultLabels[d.target_fault]}</div></div>
+                    <div class="metric-card"><div class="metric-label">Prediction Match</div><div class="metric-value" style="font-size:1.1rem; color:${correct ? '#10B981' : '#EF4444'};">${correct ? '✓ PASS' : '✗ FAIL'}</div></div>
+                    <div class="metric-card"><div class="metric-label">Confidence</div><div class="metric-value" style="font-size:1.1rem;">${(d.confidence * 100).toFixed(1)}%</div></div>
+                </div>
+            `;
+        }
+    }
+}
+
+// ── Load Records ──────────────────────────────────────────────
+async function loadRecords() {
+    const target = currentPage === 'live' ? 'recent-records-live' : 'recent-records';
+    const container = document.getElementById(target);
+    if (!container) return;
+
+    const d = await fetchJSON('/api/records/25');
+    if (!d || d.status !== 'ok') return;
+    if (currentMode === 'simulation') {
+        const simulationLog = document.getElementById('simulation-telemetry-log');
+        if (simulationLog) simulationLog.innerHTML = buildSimulationTelemetryTable(d.records);
+        container.innerHTML = buildSimulationTelemetryTable(d.records);
+    } else {
+        container.innerHTML = buildRecordsTable(d.records);
+    }
+}
+
+// ── Load Trends ───────────────────────────────────────────────
+async function loadTrends() {
+    if (currentPage !== 'trends') return;
+    const d = await fetchJSON('/api/trends/' + trendRange);
+    if (!d || d.status !== 'ok') return;
+
+    // Temperature Trend
+    Plotly.react('chart-temp', [
+        { y: d.Temp1, mode: 'lines', name: 'Stator Winding 1', line: { color: '#0284C7', width: 2.2 } },
+        { y: d.Temp2, mode: 'lines', name: 'Bearing Housing 2', line: { color: '#10B981', width: 2.2 } },
+    ], {
+        ...PLOTLY_LAYOUT, height: 260,
+        shapes: [
+            { type: 'line', y0: 55, y1: 55, x0: 0, x1: 1, xref: 'paper', line: { color: 'rgba(245,158,11,0.6)', dash: 'dash', width: 1.5 } },
+            { type: 'line', y0: 75, y1: 75, x0: 0, x1: 1, xref: 'paper', line: { color: 'rgba(239,68,68,0.6)', dash: 'dash', width: 1.5 } },
+        ],
+        annotations: [
+            { x: 1, xref: 'paper', y: 55, text: 'Warning 55°C', showarrow: false, font: { size: 9, color: '#D97706' }, xanchor: 'right' },
+            { x: 1, xref: 'paper', y: 75, text: 'Hazard 75°C', showarrow: false, font: { size: 9, color: '#DC2626' }, xanchor: 'right' },
+        ],
+    }, PLOTLY_CONFIG);
+
+    // RPM Speed Trend
+    Plotly.react('chart-rpm', [
+        { y: d.RPM, mode: 'lines', name: 'Shaft Speed (RPM)', line: { color: '#7C3AED', width: 2.2 } },
+    ], {
+        ...PLOTLY_LAYOUT, height: 260,
+        shapes: [
+            { type: 'line', y0: 1500, y1: 1500, x0: 0, x1: 1, xref: 'paper', line: { color: 'rgba(16,185,129,0.5)', dash: 'dash', width: 1.2 } },
+            { type: 'line', y0: 1750, y1: 1750, x0: 0, x1: 1, xref: 'paper', line: { color: 'rgba(239,68,68,0.5)', dash: 'dash', width: 1.2 } },
+        ],
+        annotations: [
+            { x: 1, xref: 'paper', y: 1500, text: 'Rated 1500 RPM', showarrow: false, font: { size: 9, color: '#166534' }, xanchor: 'right' },
+            { x: 1, xref: 'paper', y: 1750, text: 'Over-speed 1750 RPM', showarrow: false, font: { size: 9, color: '#DC2626' }, xanchor: 'right' },
+        ],
+    }, PLOTLY_CONFIG);
+
+    // Tri-Axial Vibration Trend
+    Plotly.react('chart-vib', [
+        { y: d.X, mode: 'lines', name: 'X-Axis Radial', line: { color: '#EF4444', width: 1.6 } },
+        { y: d.Y, mode: 'lines', name: 'Y-Axis Vertical', line: { color: '#F59E0B', width: 1.6 } },
+        { y: d.Z, mode: 'lines', name: 'Z-Axis Axial', line: { color: '#0284C7', width: 1.6 } },
+    ], {
+        ...PLOTLY_LAYOUT, height: 260,
+        shapes: [
+            { type: 'line', y0: 1.8, y1: 1.8, x0: 0, x1: 1, xref: 'paper', line: { color: 'rgba(16,185,129,0.5)', dash: 'dot', width: 1.2 } },
+            { type: 'line', y0: 2.8, y1: 2.8, x0: 0, x1: 1, xref: 'paper', line: { color: 'rgba(245,158,11,0.5)', dash: 'dot', width: 1.2 } },
+        ],
+        annotations: [
+            { x: 1, xref: 'paper', y: 1.8, text: 'ISO Zone A (1.8g)', showarrow: false, font: { size: 9, color: '#166534' }, xanchor: 'right' },
+            { x: 1, xref: 'paper', y: 2.8, text: 'ISO Zone B (2.8g)', showarrow: false, font: { size: 9, color: '#D97706' }, xanchor: 'right' },
+        ],
+    }, PLOTLY_CONFIG);
+
+    // Confidence Trend
+    Plotly.react('chart-conf', [
+        { y: d.Confidence.map(v => v * 100), mode: 'lines', name: 'Confidence (%)', line: { color: '#10B981', width: 2.2 }, fill: 'tozeroy', fillcolor: 'rgba(16,185,129,0.08)' },
+    ], {
+        ...PLOTLY_LAYOUT, height: 260,
+        yaxis: { ...PLOTLY_LAYOUT.yaxis, range: [0, 105] },
+        shapes: [
+            { type: 'line', y0: 85, y1: 85, x0: 0, x1: 1, xref: 'paper', line: { color: 'rgba(16,185,129,0.4)', dash: 'dash', width: 1 } },
+        ],
+    }, PLOTLY_CONFIG);
+
+    // Fault Class Distribution Bar Chart
+    const faultLabels = { 0: 'Normal', 1: 'Bearing', 2: 'Stator', 3: 'Rotor', 4: 'Overload', 5: 'Misalignment' };
+    const counts = {};
+    d.Predicted_Fault.forEach(f => { counts[f] = (counts[f] || 0) + 1; });
+    const keys = Object.keys(counts).map(Number).sort();
+    const labels = keys.map(k => faultLabels[k] || 'Fault ' + k);
+    const values = keys.map(k => counts[k]);
+    const colors = keys.map(k => k === 0 ? '#10B981' : k <= 2 ? '#F59E0B' : '#EF4444');
+
+    Plotly.react('chart-dist', [{
+        type: 'bar',
+        x: labels, y: values,
+        marker: { color: colors, line: { color: '#CBD5E1', width: 1 } },
+        text: values, textposition: 'outside', textfont: { color: '#0B132B', size: 11, family: 'Plus Jakarta Sans', weight: 800 },
+    }], {
+        ...PLOTLY_LAYOUT, height: 260, showlegend: false,
+    }, PLOTLY_CONFIG);
+}
+
+// ── Load Alarms ───────────────────────────────────────────────
+async function loadAlarms() {
+    if (currentPage !== 'alarms') return;
+    const d = await fetchJSON('/api/alarms');
+    if (!d || d.status !== 'ok') return;
+
+    const s = d.summary;
+    document.getElementById('alarm-summary-metrics').innerHTML = `
+        <div class="metric-card"><div class="metric-label">Total Alarms</div><div class="metric-value">${s.total}</div></div>
+        <div class="metric-card"><div class="metric-label">🔴 Critical Alarms</div><div class="metric-value" style="color:#EF4444;">${s.critical}</div></div>
+        <div class="metric-card"><div class="metric-label">🟠 Major Alarms</div><div class="metric-value" style="color:#EA580C;">${s.major}</div></div>
+        <div class="metric-card"><div class="metric-label">🟡 Minor Alerts</div><div class="metric-value" style="color:#F59E0B;">${s.minor}</div></div>
+    `;
+
+    if (d.alarms.length === 0) {
+        document.getElementById('alarm-log-table').innerHTML = '<p style="padding:1rem;color:var(--text-muted);font-size:0.8rem;">No alarms recorded. All parameters within safe limits.</p>';
+        return;
+    }
+
+    let html = '<table class="records-table"><thead><tr><th>Timestamp</th><th>Severity</th><th>Fault Condition</th><th>Confidence</th><th>Simulation Phase</th></tr></thead><tbody>';
+    for (const a of d.alarms) {
+        html += `<tr>
+            <td class="mono">${a.timestamp}</td>
+            <td><span class="severity-badge ${a.severity.toLowerCase()}">${a.severity.toUpperCase()}</span></td>
+            <td style="color:var(--text-heading);font-weight:800;">${a.fault_label}</td>
+            <td class="mono" style="font-weight:800;">${a.confidence}%</td>
+            <td>${a.phase || 'N/A'}</td>
+        </tr>`;
+    }
+    html += '</tbody></table>';
+    document.getElementById('alarm-log-table').innerHTML = html;
+}
+
+// ── Load Governance ───────────────────────────────────────────
+async function loadGovernance() {
+    if (currentPage !== 'governance') return;
+    const d = await fetchJSON('/api/governance');
+    const container = document.getElementById('governance-content');
+
+    if (!d || d.status !== 'ok') {
+        container.innerHTML = `
+            <div class="alarm-banner normal">
+                <span class="alarm-banner-icon">ℹ️</span>
+                <div class="alarm-banner-content">
+                    <h4>PRODUCTION MODEL SECURE</h4>
+                    <p>No pending retraining review records. The verified production model remains active in inference.</p>
+                </div>
+            </div>`;
+        return;
+    }
+
+    let statusBadge = '';
+    if (d.reviewer_decision === 'APPROVE') statusBadge = '<div class="alarm-banner normal" style="margin-top:0.8rem;"><span class="alarm-banner-icon">✓</span>Candidate model approved and promoted to production</div>';
+    else if (d.reviewer_decision === 'REJECT') statusBadge = '<div class="alarm-banner critical" style="margin-top:0.8rem;"><span class="alarm-banner-icon">✗</span>Candidate rejected by lead reviewer · Production model safeguarded</div>';
+    else statusBadge = '<div class="alarm-banner warning" style="margin-top:0.8rem;"><span class="alarm-banner-icon">⏳</span>Candidate review is currently pending independent verification</div>';
+
+    const training = d.retraining || {};
+    const candidate = d.candidate || {};
+    const active = (d.registry || {}).active_model || {};
+    const history = (d.history || []).map(item =>
+        `<tr><td class="mono">${item.timestamp || '—'}</td><td>${item.trigger || '—'}</td><td>${item.status || '—'}</td><td>${(item.candidate || {}).decision || '—'}</td></tr>`
+    ).join('');
+    const comparison = d.model_comparison
+        ? `<pre style="white-space:pre-wrap;max-height:260px;overflow:auto;font-size:.7rem;color:var(--text-body);">${d.model_comparison}</pre>`
+        : '<p style="font-size:.75rem;color:var(--text-muted);">No model comparison report available.</p>';
+    const versions = ((d.registry || {}).versions || []).map(item =>
+        `<option value="${item.version}">${item.version}</option>`
+    ).join('');
+    const rollbackSelect = document.getElementById('model-rollback-version');
+    if (rollbackSelect) rollbackSelect.innerHTML = '<option value="">Rollback version</option>' + versions;
+
+    container.innerHTML = `
+        <div class="metric-grid">
+            <div class="metric-card"><div class="metric-label">Active Inference Model</div><div class="metric-value" style="font-size:1.15rem;color:#10B981;">${active.version || 'Production Model'}</div></div>
+            <div class="metric-card"><div class="metric-label">Automated System Check</div><div class="metric-value" style="font-size:1.15rem;">${d.system_decision}</div></div>
+            <div class="metric-card"><div class="metric-label">Reviewer Decision</div><div class="metric-value" style="font-size:1.15rem;">${d.reviewer_decision}</div></div>
+            <div class="metric-card"><div class="metric-label">Retraining Status</div><div class="metric-value" style="font-size:1.15rem;">${training.state || 'idle'}</div></div>
+        </div>
+        <div class="metric-grid" style="margin-top:0.8rem;">
+            <div class="metric-card"><div class="metric-label">Production Accuracy</div><div class="metric-value">${d.production_accuracy}%</div></div>
+            <div class="metric-card"><div class="metric-label">Candidate Accuracy</div><div class="metric-value">${d.candidate_accuracy}%</div></div>
+            <div class="metric-card"><div class="metric-label">Accuracy Delta</div><div class="metric-value" style="color:#10B981;">+${d.accuracy_change} pp</div></div>
+            <div class="metric-card"><div class="metric-label">Fault 4 Recall Delta</div><div class="metric-value" style="color:#10B981;">+${d.fault4_recall_change} pp</div></div>
+        </div>
+        <div class="metric-grid" style="margin-top:.8rem;">
+            <div class="metric-card"><div class="metric-label">Eligible Labelled Records</div><div class="metric-value">${training.eligible_labelled_records || 0}</div></div>
+            <div class="metric-card"><div class="metric-label">Candidate Accuracy</div><div class="metric-value">${candidate.accuracy ? (candidate.accuracy * 100).toFixed(2) + '%' : 'Unavailable'}</div></div>
+            <div class="metric-card"><div class="metric-label">Candidate Macro F1</div><div class="metric-value">${candidate.macro_f1 ? (candidate.macro_f1 * 100).toFixed(2) + '%' : 'Unavailable'}</div></div>
+            <div class="metric-card"><div class="metric-label">Approval Required</div><div class="metric-value">${(d.criteria || {}).approval_required ? 'YES' : 'NO'}</div></div>
+        </div>
+        <div class="gauge-card" style="padding:1rem;margin-top:.8rem;">
+            <div class="section-title">ANN / Random Forest / XGBoost comparison</div>
+            ${comparison}
+        </div>
+        <div class="gauge-card" style="padding:1rem;margin-top:.8rem;">
+            <div class="section-title">Training history</div>
+            <div class="records-scroll" style="max-height:220px;"><table class="records-table"><thead><tr><th>Timestamp</th><th>Trigger</th><th>Status</th><th>Decision</th></tr></thead><tbody>${history || '<tr><td colspan="4">No training runs recorded.</td></tr>'}</tbody></table></div>
+        </div>
+        ${statusBadge}
+        <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.6rem;">Reviewer Audit Notes: ${d.review_notes || 'None logged.'}</p>
+    `;
+}
+
+async function modelLabRequest(path, body) {
+    const token = document.getElementById('model-operator-token').value;
+    const response = await fetch(path, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-Model-Operator': token},
+        body: JSON.stringify(body || {}),
+    });
+    const data = await response.json();
+    if (!response.ok || data.status !== 'ok') throw new Error(data.message || 'Model operation failed');
+    return data;
+}
+
+document.getElementById('model-retrain-btn').addEventListener('click', async () => {
+    const message = document.getElementById('model-lab-message');
+    try {
+        await modelLabRequest('/api/governance/retrain', {trigger: 'manual'});
+        message.textContent = 'Candidate retraining started in the background. Production inference remains active.';
+        await loadGovernance();
+    } catch (error) {
+        message.textContent = error.message;
+    }
+});
+
+document.getElementById('model-test-btn').addEventListener('click', async () => {
+    const message = document.getElementById('model-lab-message');
+    try {
+        const latest = cachedLatestData && cachedLatestData.sensors;
+        if (!latest) throw new Error('No telemetry record is available to test');
+        const model = document.getElementById('model-test-choice').value;
+        const result = await modelLabRequest('/api/governance/test', {model, sensors: latest});
+        message.textContent = `${result.result.model} predicts Fault ${result.result.predicted_fault} (${(result.result.confidence * 100).toFixed(1)}% confidence). Production model was not changed.`;
+    } catch (error) {
+        message.textContent = error.message;
+    }
+});
+
+document.getElementById('model-promote-btn').addEventListener('click', async () => {
+    const message = document.getElementById('model-lab-message');
+    try {
+        const notes = document.getElementById('model-approval-notes').value.trim();
+        if (!notes) throw new Error('Approval notes are required');
+        await modelLabRequest('/api/governance/promote', {notes});
+        message.textContent = 'Candidate promoted atomically. Existing predictions were protected during the swap.';
+        await loadGovernance();
+    } catch (error) {
+        message.textContent = error.message;
+    }
+});
+
+document.getElementById('model-rollback-btn').addEventListener('click', async () => {
+    const message = document.getElementById('model-lab-message');
+    try {
+        const version = document.getElementById('model-rollback-version').value;
+        if (!version) throw new Error('Select a preserved production version');
+        const notes = document.getElementById('model-approval-notes').value.trim();
+        await modelLabRequest('/api/governance/rollback', {version, notes});
+        message.textContent = `Rolled back to ${version}.`;
+        await loadGovernance();
+    } catch (error) {
+        message.textContent = error.message;
+    }
+});
+
+// ── Load System Health ────────────────────────────────────────
+async function loadHealth() {
+    if (currentPage !== 'health') return;
+    const d = await fetchJSON('/api/health');
+    if (!d || d.status !== 'ok') return;
+
+    document.getElementById('health-metrics').innerHTML = `
+        <div class="metric-card"><div class="metric-label">Total Sensor Records</div><div class="metric-value">${d.total_records}</div></div>
+        <div class="metric-card"><div class="metric-label">Missing Telemetry Values</div><div class="metric-value" style="color:${d.missing_values === 0 ? '#10B981' : '#EF4444'};">${d.missing_values}</div></div>
+        <div class="metric-card"><div class="metric-label">Duplicate Samples</div><div class="metric-value" style="color:${d.duplicate_rows === 0 ? '#10B981' : '#F59E0B'};">${d.duplicate_rows}</div></div>
+        <div class="metric-card"><div class="metric-label">Healthy Baseline %</div><div class="metric-value" style="color:#10B981;">${d.normal_pct}%</div></div>
+    `;
+
+    let checks = '';
+    checks += d.missing_values === 0
+        ? '<div class="alarm-banner normal" style="margin:0.4rem 0;"><span class="alarm-banner-icon">✓</span>Sensor data ingestion integrity verified (zero missing telemetry readings)</div>'
+        : '<div class="alarm-banner critical" style="margin:0.4rem 0;"><span class="alarm-banner-icon">✗</span>Missing sensor readings detected in current buffer</div>';
+    checks += d.duplicate_rows === 0
+        ? '<div class="alarm-banner normal" style="margin:0.4rem 0;"><span class="alarm-banner-icon">✓</span>Data stream deduplication check passed</div>'
+        : '<div class="alarm-banner warning" style="margin:0.4rem 0;"><span class="alarm-banner-icon">⚠</span>Duplicate sample rows detected</div>';
+    document.getElementById('health-checks').innerHTML = checks;
+
+    const labels = Object.keys(d.distribution);
+    const values = Object.values(d.distribution);
+    const colors = labels.map(l => l === 'Normal' ? '#10B981' : l.includes('Bearing') || l.includes('Stator') ? '#F59E0B' : '#EF4444');
+
+    Plotly.react('chart-health-donut', [{
+        type: 'pie',
+        labels: labels, values: values,
+        marker: { colors: colors, line: { color: '#FFFFFF', width: 2 } },
+        hole: 0.58,
+        textfont: { size: 11, color: '#0B132B' },
+    }], {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { family: 'Plus Jakarta Sans', color: '#475569' },
+        height: 300,
+        margin: { l: 20, r: 20, t: 20, b: 20 },
+        legend: { bgcolor: 'rgba(0,0,0,0)', font: { size: 11, color: '#334155' } },
+        showlegend: true,
+    }, PLOTLY_CONFIG);
+}
+
+// ── Build Shift Report Modal ──────────────────────────────────
+function buildShiftReport() {
+    const now = new Date();
+    document.getElementById('report-timestamp').textContent = 'Generated: ' + now.toLocaleString();
+    if (!cachedLatestData) return;
+
+    const d = cachedLatestData;
+    const body = document.getElementById('report-modal-body');
+
+    body.innerHTML = `
+        <div style="background:#F8FAFC; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1rem; margin-bottom:1rem;">
+            <h3 style="font-size:0.9rem; color:var(--brand-primary); margin-bottom:0.4rem; font-weight:800;">Machine Identification & Status</h3>
+            <p style="font-size:0.78rem; color:var(--text-body); line-height:1.5;">
+                <strong>Machine ID:</strong> DC Series Motor M-01 | <strong>Specification:</strong> 220V DC, 1500 RPM, Class F Insulation<br>
+                <strong>Current Condition:</strong> <span style="color:${d.condition_color}; font-weight:800;">${d.condition_label}</span> (Health Index: ${d.health_score}%)<br>
+                <strong>Diagnostic Verdict:</strong> ${d.fault_label} (Confidence: ${(d.confidence * 100).toFixed(1)}%)<br>
+                <strong>Warning Classification:</strong> ${d.warning_status} | <strong>Consecutive Abnormal Pulses:</strong> ${d.consecutive_abnormal}
+            </p>
+        </div>
+
+        <div style="background:#F8FAFC; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1rem; margin-bottom:1rem;">
+            <h3 style="font-size:0.9rem; color:var(--brand-primary); margin-bottom:0.4rem; font-weight:800;">Snapshot Sensor Telemetry</h3>
+            <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:0.5rem; font-size:0.78rem;">
+                <div>Speed: <strong>${(d.sensors.RPM || 0).toFixed(0)} rpm</strong></div>
+                <div>Voltage: <strong>${(d.sensors.Voltage || 0).toFixed(1)} V</strong></div>
+                <div>Current: <strong>${(d.sensors.Current || 0).toFixed(1)} A</strong></div>
+                <div>Winding Temp: <strong>${(d.sensors.Temp1 || 0).toFixed(1)} °C</strong></div>
+                <div>Bearing Temp: <strong>${(d.sensors.Temp2 || 0).toFixed(1)} °C</strong></div>
+                <div>Vib X (Radial): <strong>${(d.sensors.X || 0).toFixed(2)} g</strong></div>
+                <div>Vib Y (Vertical): <strong>${(d.sensors.Y || 0).toFixed(2)} g</strong></div>
+                <div>Vib Z (Axial): <strong>${(d.sensors.Z || 0).toFixed(2)} g</strong></div>
+            </div>
+        </div>
+
+        <div style="background:#F8FAFC; border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1rem;">
+            <h3 style="font-size:0.9rem; color:var(--brand-primary); margin-bottom:0.4rem; font-weight:800;">Physical Maintenance Action Plan</h3>
+            <p style="font-size:0.78rem; color:var(--text-body); margin-bottom:0.5rem;">${d.plain_english_summary}</p>
+            <ul style="padding-left:1.2rem; font-size:0.78rem; color:var(--text-body); line-height:1.6;">
+                ${(d.maintenance_actions || []).map(a => `<li>${a}</li>`).join('')}
+            </ul>
+        </div>
+    `;
+}
+
+// ── Master Refresh Loop ───────────────────────────────────────
+async function refreshAll() {
+    await loadLatest();
+    if (currentPage === 'overview' || currentPage === 'live') await loadRecords();
+    if (currentPage === 'student-hub') await loadFaultEncyclopedia();
+    if (currentPage === 'trends') await loadTrends();
+    if (currentPage === 'alarms') await loadAlarms();
+    if (currentPage === 'governance') await loadGovernance();
+    if (currentPage === 'health') await loadHealth();
+}
+
+function startRefresh() {
+    refreshAll();
+    loadFaultEncyclopedia();
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(refreshAll, REFRESH_MS);
+}
+
+startRefresh();
+
+</script>
+</body>
+</html>

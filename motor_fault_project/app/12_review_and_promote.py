@@ -1,7 +1,5 @@
 import csv
-import shutil
 import sys
-from datetime import datetime
 from pathlib import Path
 
 
@@ -11,6 +9,7 @@ sys.path.insert(
 )
 
 import config
+import model_governance
 
 
 REVIEW_LOG_FILE = (
@@ -31,11 +30,6 @@ CANDIDATE_SCALER_FILE = (
 CANDIDATE_CLASSES_FILE = (
     config.MODEL_DIR
     / "candidate_classes.json"
-)
-
-BACKUP_DIR = (
-    config.MODEL_DIR
-    / "backups"
 )
 
 VALID_DECISIONS = [
@@ -136,80 +130,13 @@ def update_latest_review(
         writer.writeheader()
         writer.writerows(rows)
 
-def backup_production_files():
-    timestamp = datetime.now().strftime(
-        "%Y%m%d_%H%M%S"
+def promote_candidate(reviewer_name, review_notes):
+    """Promote through the shared atomic, versioned governance workflow."""
+    result = model_governance.promote_candidate(
+        reviewer_name,
+        review_notes,
     )
-
-    backup_path = (
-        BACKUP_DIR
-        / f"production_{timestamp}"
-    )
-
-    backup_path.mkdir(
-        parents=True,
-        exist_ok=False,
-    )
-
-    production_files = [
-        config.MODEL_FILE,
-        config.SCALER_FILE,
-        config.CLASSES_FILE,
-    ]
-
-    for source_file in production_files:
-        if not source_file.exists():
-            raise FileNotFoundError(
-                "Production file not found: "
-                f"{source_file}"
-            )
-
-        shutil.copy2(
-            source_file,
-            backup_path / source_file.name,
-        )
-
-    return backup_path
-
-
-def promote_candidate():
-    candidate_files = [
-        CANDIDATE_MODEL_FILE,
-        CANDIDATE_SCALER_FILE,
-        CANDIDATE_CLASSES_FILE,
-    ]
-
-    for candidate_file in candidate_files:
-        if not candidate_file.exists():
-            raise FileNotFoundError(
-                "Candidate file not found: "
-                f"{candidate_file}"
-            )
-
-    backup_path = backup_production_files()
-
-    replacement_pairs = [
-        (
-            CANDIDATE_MODEL_FILE,
-            config.MODEL_FILE,
-        ),
-        (
-            CANDIDATE_SCALER_FILE,
-            config.SCALER_FILE,
-        ),
-        (
-            CANDIDATE_CLASSES_FILE,
-            config.CLASSES_FILE,
-        ),
-    ]
-
-    for source_file, destination_file in replacement_pairs:
-        shutil.copy2(
-            source_file,
-            destination_file,
-        )
-
-    return backup_path
+    return result["promotion"]["backup_path"]
 
 
 def main():
@@ -229,7 +156,10 @@ def main():
     print("Updated latest model review record.")
 
     if decision == "APPROVE":
-        backup_path = promote_candidate()
+        backup_path = promote_candidate(
+            reviewer_name,
+            review_notes,
+        )
 
         print()
         print("Candidate promoted to production.")

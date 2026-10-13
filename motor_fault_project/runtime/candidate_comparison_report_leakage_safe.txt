@@ -1,0 +1,58 @@
+Candidate Retraining Comparison
+================================
+
+Original dataset rows: 5499
+Original training rows: 3299
+Original validation rows: 1100
+Untouched original test rows: 1100
+Dataset fingerprint: sha256:d58408e7997d06453dcc0930260eac4a3f5f918ed4587638feb9b09e3f42c301
+Split methodology: stratified_group_60_20_20_v1
+Candidate training fingerprint: sha256:c2feed87746a9f40b72c17fcf170715a0e54a11f8f1e342e7a4af88cf95516d9
+Verified buffer rows: 1500
+Candidate training rows: 4799
+
+Production accuracy: 97.45%
+Candidate accuracy: 95.91%
+Best candidate accuracy during validation selection: 96.27%
+
+Test set used for candidate checkpoint selection: False
+Historical comparison note: the previously existing candidate_comparison_report.txt was produced by the prior test-selection methodology and is intentionally preserved.
+
+Candidate training duration seconds: 54.794
+Candidate inference latency milliseconds per record: 0.0028
+Candidate macro precision: 94.02%
+Candidate macro recall: 96.31%
+Candidate macro F1: 95.08%
+
+Per-class recall comparison
+Fault 0 | Production: 96.43% | Candidate: 94.98%
+Fault 1 | Production: 100.00% | Candidate: 100.00%
+Fault 2 | Production: 99.22% | Candidate: 96.09%
+Fault 3 | Production: 99.08% | Candidate: 97.25%
+Fault 4 | Production: 97.37% | Candidate: 92.11%
+Fault 5 | Production: 97.46% | Candidate: 97.46%
+
+Promotion rules
+Candidate accuracy >= 95.00%
+Candidate accuracy drop <= 0.00%
+Candidate macro F1 drop <= 0.00%
+Production macro F1: 97.26%
+Candidate macro F1: 95.08%
+Every candidate class recall >= 90.00%
+
+Decision: REVIEW_REQUIRED
+Eligible for automatic promotion: False
+
+Candidate classification report
+              precision    recall  f1-score   support
+
+     Fault 0       0.99      0.95      0.97       617
+     Fault 1       0.96      1.00      0.98        90
+     Fault 2       0.84      0.96      0.89       128
+     Fault 3       0.95      0.97      0.96       109
+     Fault 4       0.92      0.92      0.92        38
+     Fault 5       0.98      0.97      0.98       118
+
+    accuracy                           0.96      1100
+   macro avg       0.94      0.96      0.95      1100
+weighted avg       0.96      0.96      0.96      1100
