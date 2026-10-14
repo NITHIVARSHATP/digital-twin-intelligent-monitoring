@@ -1,0 +1,41 @@
+# 1. Install deps
+pip install pandas numpy torch scikit-learn joblib streamlit openpyxl
+
+# 2. Train the model (one-time)
+python motor_fault_project/app/02_train_model.py
+
+# 3. Start simulator in one terminal
+python motor_fault_project/app/08_synthetic_realtime_simulator.py
+
+# 4. Start dashboard in another terminal
+streamlit run motor_fault_project/app/06_dashboard.py
+
+
+
+
+# commands
+https://industrial-machineintelligence-default-rtdb.asia-southeast1.firebasedatabase.app
+
+
+
+
+
+
+
+
+-----------------------------
+1st terminal:
+
+$project = "C:\Users\NITHISHVARAN T P\OneDrive\Pictures\Screenshots\filez\FINAL_YEAR_PROJ\Project\Digital_Twin\digital-twin-intelligent-monitoring"
+
+Set-Location "$project\motor_fault_project\app"
+
+& "$project\.venv\Scripts\python.exe" -c "from web_dashboard.server import app; app.run(host='127.0.0.1', port=5050, debug=False, use_reloader=False)"
+
+
+
+
+
+2nd terminal:
+Start-Process "http://127.0.0.1:5050/"
+
