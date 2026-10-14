@@ -625,10 +625,13 @@ def simulation_payload(record):
         else "DATASET LABEL"
     )
     diagnostic_code = record["fault_status"]
+    prediction_confidence = record["Confidence"]
+    if prediction_confidence is None:
+        prediction_confidence = 0.0
     diagnostic = compute_health_and_diagnostics(
         sensor_values,
         diagnostic_code,
-        0.0,
+        prediction_confidence,
         warning_status,
     )
     with simulation_lock:
@@ -643,9 +646,17 @@ def simulation_payload(record):
         "sensors": sensor_values,
         "fault_status": diagnostic_code,
         "fault_label": record["fault_label"],
-        "predicted_fault": None,
-        "ml_prediction": None,
-        "confidence": None,
+        "predicted_fault": record["Predicted_Fault"],
+        "ml_prediction": record["Predicted_Fault"],
+        "confidence": prediction_confidence,
+        "prediction_source": record["prediction_source"],
+        "model_version": record["model_version"],
+        "prediction_error": record["prediction_error"],
+        "target_fault": diagnostic_code,
+        "actual_label": diagnostic_code,
+        "is_correct": int(
+            record["Predicted_Fault"] == diagnostic_code
+        ) if record["Predicted_Fault"] is not None else 0,
         "alert_severity": severity,
         "threshold_warnings": record["threshold_warnings"],
         "warning_status": warning_status,
