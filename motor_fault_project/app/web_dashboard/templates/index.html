@@ -2230,7 +2230,9 @@ async function loadLatest() {
 
     cachedLatestData = d;
     renderSimulationStatus(d.simulation);
-    const displayFault = d.fault_status ?? d.predicted_fault ?? 0;
+    // Visualize the independent ML diagnostic. The expected/dataset label is
+    // still shown separately so a mismatch remains visible to the operator.
+    const displayFault = d.diagnostic_fault ?? d.predicted_fault ?? 0;
 
     // Check Audio Alarm Trigger
     if (displayFault !== 0 && displayFault !== previousFault) {

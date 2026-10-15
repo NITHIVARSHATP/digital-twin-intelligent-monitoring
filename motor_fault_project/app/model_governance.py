@@ -4,6 +4,7 @@ import csv
 import hashlib
 import json
 import os
+import threading
 import shutil
 import subprocess
 import sys
@@ -53,9 +54,17 @@ def _read_json(path, default):
 
 def _write_json(path, value):
     config.RUNTIME_DIR.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
+    # A fixed temporary name lets two dashboard processes overwrite each
+    # other's file on Windows/OneDrive. Use a process/thread-specific staging
+    # file so atomic replacement remains safe during restart races.
+    temporary = path.with_name(
+        f"{path.name}.{os.getpid()}.{threading.get_ident()}.tmp"
+    )
     temporary.write_text(json.dumps(value, indent=2), encoding="utf-8")
-    os.replace(temporary, path)
+    try:
+        os.replace(temporary, path)
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _append_audit(event, actor, details):

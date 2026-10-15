@@ -63,7 +63,21 @@ SIMULATION_THRESHOLDS = {
     "Temp2": {"warning": 55.0, "critical": 75.0},
     "Current": {"warning": 16.0, "critical": 22.0},
     "RPM": {"warning": 1750.0, "critical": 2200.0},
-    "Vibration": {"warning": 1.8, "critical": 2.8},
+    # X/Y/Z are stored on the same scale as the training workbook.  The
+    # observed normal magnitude is about 9.9, so the previous 1.8/2.8
+    # limits made nearly every row critical.
+    "Vibration": {"warning": 16.0, "critical": 22.0},
+}
+
+SENSOR_UNITS = {
+    "Voltage": "V",
+    "Current": "A",
+    "RPM": "rpm",
+    "Temp1": "°C",
+    "Temp2": "°C",
+    "X": "g",
+    "Y": "g",
+    "Z": "g",
 }
 
 SIMULATION_COLUMNS = [
@@ -229,15 +243,20 @@ def simulation_alert(sensor_data):
         elif value >= limits["warning"]:
             warnings.append(f"{field} warning")
 
-    vibration = max(
-        abs(sensor_data.get(axis, 0.0))
+    vibration_values = [
+        sensor_data.get(axis)
         for axis in ("X", "Y", "Z")
-    )
+    ]
+    if any(value is None or not np.isfinite(value)
+           for value in vibration_values):
+        vibration = None
+    else:
+        vibration = float(np.sqrt(sum(value ** 2 for value in vibration_values)))
     vibration_limits = SIMULATION_THRESHOLDS["Vibration"]
-    if vibration >= vibration_limits["critical"]:
+    if vibration is not None and vibration >= vibration_limits["critical"]:
         warnings.append("Vibration critical")
         critical = True
-    elif vibration >= vibration_limits["warning"]:
+    elif vibration is not None and vibration >= vibration_limits["warning"]:
         warnings.append("Vibration warning")
 
     if critical:
@@ -247,28 +266,142 @@ def simulation_alert(sensor_data):
     return "Normal", warnings
 
 
+def _threshold_status(value, limits):
+    if value is None or not np.isfinite(value):
+        return "Unavailable"
+    if value >= limits["critical"]:
+        return "Critical"
+    if value >= limits["warning"]:
+        return "Warning"
+    return "Normal"
+
+
+def diagnostic_warning_status(severity, predicted_fault):
+    if severity == "Critical":
+        return "CRITICAL ALERT"
+    if severity == "Warning":
+        return "SENSOR THRESHOLD WARNING"
+    if predicted_fault not in (None, 0):
+        return "POSSIBLE ABNORMALITY"
+    return "NORMAL"
+
+
+def build_diagnostic_snapshot(
+    sensors,
+    predicted_fault,
+    confidence,
+    *,
+    expected_fault=None,
+    phase=None,
+    source="unknown",
+    record_id=None,
+    timestamp=None,
+):
+    validated = {}
+    invalid_fields = []
+    for field in config.FEATURE_COLUMNS:
+        value = sensors.get(field)
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            value = None
+        if value is None or not np.isfinite(value):
+            invalid_fields.append(field)
+        validated[field] = value
+
+    if invalid_fields:
+        raise ValueError(
+            "Invalid sensor values: " + ", ".join(invalid_fields)
+        )
+
+    severity, warnings = simulation_alert(validated)
+    warning_status = diagnostic_warning_status(severity, predicted_fault)
+    diagnostic = compute_health_and_diagnostics(
+        validated,
+        predicted_fault,
+        confidence or 0.0,
+        warning_status,
+    )
+    sensor_condition = {
+        field: _threshold_status(
+            validated[field],
+            SIMULATION_THRESHOLDS[field],
+        )
+        for field in ("Temp1", "Temp2", "Current", "RPM")
+    }
+    vibration = diagnostic["vib_magnitude"]
+    sensor_condition["Vibration"] = _threshold_status(
+        vibration,
+        SIMULATION_THRESHOLDS["Vibration"],
+    )
+    return {
+        "record_id": record_id,
+        "timestamp": timestamp,
+        "source": source,
+        "phase": phase,
+        "expected_fault": expected_fault,
+        "predicted_fault": predicted_fault,
+        "confidence": confidence,
+        "sensor_condition": sensor_condition,
+        "motor_operating_state": (
+            "STOPPED" if validated["RPM"] == 0 else "OPERATING"
+        ),
+        "alert_severity": severity,
+        "threshold_warnings": warnings,
+        "warning_status": warning_status,
+        "sensor_units": SENSOR_UNITS,
+        "thresholds": SIMULATION_THRESHOLDS,
+        **diagnostic,
+    }
+
+
 def simulation_record(row):
     sensors = {
         column: float(row[column])
         for column in config.FEATURE_COLUMNS
     }
     fault_status = int(row[config.TARGET_COLUMN])
-    severity, warnings = simulation_alert(sensors)
     prediction = production_predictor.predict(sensors)
+    predicted_fault = prediction["Predicted_Fault"]
+    timestamp = datetime.now().isoformat(timespec="seconds")
+    record_id = f"simulation-{simulation_state['row_index']}"
+    diagnostic = build_diagnostic_snapshot(
+        sensors,
+        predicted_fault,
+        prediction["Confidence"],
+        expected_fault=fault_status,
+        phase="DATASET_PLAYBACK",
+        source=prediction["prediction_source"],
+        record_id=record_id,
+        timestamp=timestamp,
+    )
     return {
-        "timestamp": datetime.now().isoformat(timespec="seconds"),
+        "timestamp": timestamp,
+        "record_id": record_id,
         **sensors,
         "Fault Status": fault_status,
         "fault_status": fault_status,
+        "expected_fault": fault_status,
+        "expected_label": simulation_fault_label(fault_status),
         "fault_label": simulation_fault_label(fault_status),
-        "Predicted_Fault": prediction["Predicted_Fault"],
+        "Predicted_Fault": predicted_fault,
+        "predicted_fault": predicted_fault,
         "Confidence": prediction["Confidence"],
-        "ml_prediction": prediction["Predicted_Fault"],
+        "ml_prediction": predicted_fault,
+        "ml_label": simulation_fault_label(predicted_fault),
+        "prediction_match": (
+            predicted_fault == fault_status
+            if predicted_fault is not None
+            else None
+        ),
         "prediction_source": prediction["prediction_source"],
         "model_version": prediction["model_version"],
         "prediction_error": prediction["prediction_error"],
-        "alert_severity": severity,
-        "threshold_warnings": warnings,
+        "alert_severity": diagnostic["alert_severity"],
+        "threshold_warnings": diagnostic["threshold_warnings"],
+        "sensor_condition": diagnostic["sensor_condition"],
+        "motor_operating_state": diagnostic["motor_operating_state"],
+        "diagnostic": diagnostic,
     }
 
 
@@ -624,14 +757,16 @@ def simulation_payload(record):
         if severity != "Normal"
         else "DATASET LABEL"
     )
-    diagnostic_code = record["fault_status"]
+    expected_fault = record["expected_fault"]
+    predicted_fault = record["predicted_fault"] if "predicted_fault" in record else record["Predicted_Fault"]
+    diagnostic_code = predicted_fault
     prediction_confidence = record["Confidence"]
     if prediction_confidence is None:
-        prediction_confidence = 0.0
+        prediction_confidence = None
     diagnostic = compute_health_and_diagnostics(
         sensor_values,
         diagnostic_code,
-        prediction_confidence,
+        prediction_confidence or 0.0,
         warning_status,
     )
     with simulation_lock:
@@ -643,20 +778,28 @@ def simulation_payload(record):
         "simulation_mode": True,
         "simulation_status": simulation_state["status"],
         "timestamp": record["timestamp"],
+        "record_id": record.get("record_id"),
         "sensors": sensor_values,
-        "fault_status": diagnostic_code,
-        "fault_label": record["fault_label"],
-        "predicted_fault": record["Predicted_Fault"],
-        "ml_prediction": record["Predicted_Fault"],
+        "fault_status": expected_fault,
+        "fault_label": record["expected_label"],
+        "expected_fault": expected_fault,
+        "expected_label": record["expected_label"],
+        "predicted_fault": predicted_fault,
+        "predicted_label": record["ml_label"],
+        "ml_prediction": predicted_fault,
+        "ml_label": record["ml_label"],
         "confidence": prediction_confidence,
         "prediction_source": record["prediction_source"],
         "model_version": record["model_version"],
         "prediction_error": record["prediction_error"],
-        "target_fault": diagnostic_code,
-        "actual_label": diagnostic_code,
+        "target_fault": expected_fault,
+        "actual_label": expected_fault,
         "is_correct": int(
-            record["Predicted_Fault"] == diagnostic_code
-        ) if record["Predicted_Fault"] is not None else 0,
+            predicted_fault == expected_fault
+        ) if predicted_fault is not None else None,
+        "prediction_match": record["prediction_match"],
+        "diagnostic_fault": diagnostic_code,
+        "diagnostic_label": record["ml_label"],
         "alert_severity": severity,
         "threshold_warnings": record["threshold_warnings"],
         "warning_status": warning_status,
@@ -671,7 +814,7 @@ def simulation_payload(record):
             * 100,
             1,
         ) if records else 0,
-        "last_fault_time": record["timestamp"] if diagnostic_code else "None",
+        "last_fault_time": record["timestamp"] if predicted_fault else "None",
         "health_score": diagnostic["health_score"],
         "condition_label": diagnostic["condition_label"],
         "condition_color": diagnostic["condition_color"],

@@ -131,8 +131,8 @@ def create_output_file():
         exist_ok=True,
     )
 
-    if OUTPUT_FILE.exists():
-        OUTPUT_FILE.unlink()
+    # Keep historical operational records.  append_row writes the header only
+    # when this is a new file.
 
 
 def append_row(row):
@@ -374,8 +374,15 @@ def main():
                     )
                 )
 
-                is_correct = int(
-                    predicted_fault == actual_label
+                definitive_label = (
+                    actual_label
+                    if phase_name in {"NORMAL", "FAULT"}
+                    else None
+                )
+                is_correct = (
+                    int(predicted_fault == definitive_label)
+                    if definitive_label is not None
+                    else None
                 )
 
                 row = {
@@ -384,7 +391,7 @@ def main():
                     ),
                     "Phase": phase_name,
                     "Target_Fault": target_fault,
-                    "Actual_Label": actual_label,
+                    "Actual_Label": definitive_label,
                     **previous_reading,
                     "Predicted_Fault": predicted_fault,
                     "Confidence": confidence,
